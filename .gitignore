@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+release/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# Env
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Test
+coverage/
+
+# State files (don't commit daily review state)
+.daily-review-state.json
+
+# Temp
+temp/
+tmp/
+*.tmp
+# Debug/temp artifacts
+cacheKeys.txt
+electronInfo.json
+electronPath.txt
+extensions.txt
+loadFn.txt
+resolveFn.txt
+npm
+
+# Electron packaging artifacts
+*.dmg
+*.exe
+*.msi
+*.AppImage

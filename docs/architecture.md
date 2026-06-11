@@ -1,5 +1,8 @@
 # History Clipboard — 架构设计
 
+> 版本：v1.3 | 日期：2026-06-11
+> 状态：重构中 · QuickPick 弃用 AD List，改用原生 div
+
 ## 1. 整体架构
 
 ```
@@ -75,6 +78,17 @@
 | `clipboard:clearAll` | Renderer→Main | `{}` | `number` (删除数) | 清除非收藏+非置顶 |
 | `clipboard:copyToClipboard` | Renderer→Main | `{ id: number }` | `void` | 复制到系统剪贴板 |
 | `clipboard:getStats` | Renderer→Main | `{}` | `Stats` | 统计信息 |
+
+### 2.2.1 主进程→渲染进程 推送事件
+
+> 这些是单向推送（`webContents.send`），无需 renderer 响应。用于跨窗口状态同步。
+
+| 通道名 | 方向 | 载荷 | 触发时机 | 描述 |
+|--------|------|------|---------|------|
+| `clipboard:newItem` | Main→Renderer | `ClipboardItem` | 新内容复制时 | 通知所有窗口追加新条目 |
+| `clipboard:itemUpdated` | Main→Renderer | `ClipboardItem` | 收藏/置顶/删除时 | 通知所有窗口更新对应条目 |
+| `clipboard:itemsCleared` | Main→Renderer | `{ deletedCount }` | 清理完成时 | 通知所有窗口重新加载 |
+| `quickpick:opened` | Main→Renderer | `{}` | 快捷键触发时 | QuickPick 窗口刷新数据 |
 
 ### 2.3 设置相关通道
 
@@ -281,3 +295,27 @@ index.ts
 | 快捷键注册冲突 | 弹出提示引导用户更换快捷键 |
 | 数据库损坏 | 自动备份旧文件，创建新数据库 |
 | 图片过大（>10MB） | 跳过不记录，写入日志 |
+
+---
+
+## 7. 关键设计决策（v1.3 更新）
+
+| 决策 | 说明 |
+|------|------|
+| QuickPick 列表用原生 div | Ant Design `<List>` + `<Paragraph>` 拦截点击事件（B9），改用 `<div>` + `.map()` + CSS 截断 |
+| MainWindow 列表用原生 div | 同理 + 避免 AD `Sider` 的 `overflow:hidden` 导致滚动条失效 |
+| 跨窗口同步用 IPC 广播 | QuickPick / MainWindow 是独立 BrowserWindow → 独立 Zustand store → 需要 `clipboard:itemUpdated` 广播同步 |
+| 前景应用检测异步化 | `execSync` 每 300ms 调用 PowerShell 阻塞事件循环 → 改为 `exec` + 2s 缓存 |
+| 统计从 items 实时派生 | 不用独立 `stats` 计数器（会不同步），直接用 `useMemo(() => items.filter(...).length)` |
+
+---
+
+## 修订记录
+
+| 版本 | 日期 | 修改内容 | 作者 |
+|------|------|---------|------|
+| v1.3 | 2026-06-11 | QuickPick 弃用 AD List 改用原生 div + 关键设计决策章节 | WorkBuddy |
+| v1.2 | 2026-06-11 | 新增 Main→Renderer 推送事件表(跨窗口同步)、clipboard:itemUpdated | WorkBuddy |
+| v1.1 | 2026-06-11 | 更新为实际实现状态：i18n、异步前景检测 | WorkBuddy |
+| v1.0 | 2026-06-09 | 初始版本，架构设计 | WorkBuddy |
+

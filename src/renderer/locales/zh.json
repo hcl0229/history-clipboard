@@ -1,0 +1,76 @@
+{
+  "app": {
+    "title": "历史剪贴板",
+    "hotkey": "Ctrl+Shift+V"
+  },
+  "quickpick": {
+    "search": "搜索历史...",
+    "stats": "共 {{count}} 条 · ↑↓ 选择 · Enter 复制 · Esc 关闭",
+    "justNow": "刚刚",
+    "minAgo": "{{n}} 分钟前",
+    "hourAgo": "{{n}} 小时前",
+    "dayAgo": "{{n}} 天前",
+    "image": "图片",
+    "empty": "(空)",
+    "favorite": "收藏",
+    "unfavorite": "取消收藏",
+    "pin": "置顶",
+    "unpin": "取消置顶"
+  },
+  "main": {
+    "title": "历史剪贴板",
+    "searchPlaceholder": "搜索历史记录...",
+    "pinned": "置顶",
+    "favorites": "收藏",
+    "history": "历史记录",
+    "noData": "暂无数据，复制任意内容即可记录",
+    "detail": "详情",
+    "copy": "复制",
+    "favorite": "收藏",
+    "unfavorite": "取消收藏",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "delete": "删除",
+    "clearAll": "清空历史",
+    "clearConfirm": "确认清空所有非收藏、非置顶的历史记录？",
+    "source": "来源",
+    "copiedAt": "复制时间",
+    "type": "类型",
+    "text": "纯文本",
+    "html": "富文本",
+    "img": "图片",
+    "stats": {
+      "total": "总条数",
+      "fav": "收藏数",
+      "pin": "置顶数"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "theme": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "accent": "主题色",
+    "fontSize": "字号",
+    "language": "语言",
+    "zh": "中文",
+    "en": "English",
+    "startup": "开机自启",
+    "retention": "保留天数",
+    "maxRecords": "最大记录数",
+    "hotkey": "全局快捷键",
+    "about": "关于",
+    "version": "版本"
+  },
+  "tray": {
+    "show": "打开主窗口",
+    "quick": "快速粘贴 (Ctrl+Shift+V)",
+    "quit": "退出"
+  },
+  "common": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "searching": "搜索中..."
+  }
+}

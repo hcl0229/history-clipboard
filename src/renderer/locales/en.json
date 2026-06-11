@@ -1,0 +1,76 @@
+{
+  "app": {
+    "title": "History Clipboard",
+    "hotkey": "Ctrl+Shift+V"
+  },
+  "quickpick": {
+    "search": "Search history...",
+    "stats": "{{count}} items · ↑↓ Navigate · Enter Paste · Esc Close",
+    "justNow": "Just now",
+    "minAgo": "{{n}} min ago",
+    "hourAgo": "{{n}} hr ago",
+    "dayAgo": "{{n}} days ago",
+    "image": "Image",
+    "empty": "(empty)",
+    "favorite": "Favorite",
+    "unfavorite": "Unfavorite",
+    "pin": "Pin",
+    "unpin": "Unpin"
+  },
+  "main": {
+    "title": "History Clipboard",
+    "searchPlaceholder": "Search history...",
+    "pinned": "Pinned",
+    "favorites": "Favorites",
+    "history": "History",
+    "noData": "No data yet. Copy something to get started.",
+    "detail": "Detail",
+    "copy": "Copy",
+    "favorite": "Favorite",
+    "unfavorite": "Unfavorite",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "delete": "Delete",
+    "clearAll": "Clear All",
+    "clearConfirm": "Delete all non-favorited, non-pinned history?",
+    "source": "Source",
+    "copiedAt": "Copied at",
+    "type": "Type",
+    "text": "Text",
+    "html": "Rich Text",
+    "img": "Image",
+    "stats": {
+      "total": "Total",
+      "fav": "Favorites",
+      "pin": "Pinned"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "accent": "Accent Color",
+    "fontSize": "Font Size",
+    "language": "Language",
+    "zh": "中文",
+    "en": "English",
+    "startup": "Launch at startup",
+    "retention": "Retention (days)",
+    "maxRecords": "Max Records",
+    "hotkey": "Hotkey",
+    "about": "About",
+    "version": "Version"
+  },
+  "tray": {
+    "show": "Open Main Window",
+    "quick": "Quick Pick (Ctrl+Shift+V)",
+    "quit": "Quit"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "searching": "Searching..."
+  }
+}
