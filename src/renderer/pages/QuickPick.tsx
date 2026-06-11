@@ -1,11 +1,12 @@
 /**
  * History Clipboard — QuickPick 浮窗
- * @version 2.2
- * @date 2026-06-11
- * @description 原生 div 列表渲染；handleFav/Pin 采用 await IPC 返回值模式（与 MainWindow 一致）
+ * @version 2.3
+ * @date 2026-06-12
+ * @description 原生 div 列表渲染；handleFav/Pin 调用 loadItems() 全量刷新（对齐刷新按钮机制）
  *
  * 修订记录：
- *   v2.2  2026-06-11  WorkBuddy  B9 最终修复：放弃乐观更新，改用 await IPC 返回值（对齐 MainWindow）
+ *   v2.3  2026-06-12  WorkBuddy  B9 最终修复：放弃所有局部状态更新，直接 loadItems() 全量 DB 刷新
+ *   v2.2  2026-06-11  WorkBuddy  尝试 await IPC 返回值 + setRenderItems（失败：不触发重渲染）
  *   v2.1  2026-06-11  WorkBuddy  尝试 useState 渲染源 + 乐观更新（失败：广播竞态）
  *   v2.0  2026-06-11  WorkBuddy  重构：弃用 AD List/Paragraph，原生 div + CSS line-clamp
  *   v1.2  2026-06-11  WorkBuddy  乐观更新、forceUpdate 刷新、事件代理修复
@@ -135,27 +136,25 @@ const QuickPick: React.FC = () => {
   };
 
   /**
-   * 收藏切换 — await IPC 返回值模式（与 MainWindow 一致）
+   * 收藏切换
    *
-   * 关键：await 等待 IPC 完成 + DB commit，用主进程返回的真实数据更新渲染状态。
-   * 不依赖乐观更新，不依赖 broadcast 回写，避免竞态条件。
-   * 跨窗口同步由 onItemUpdated listener 独立处理（当其他窗口 toggle 时）。
+   * 设计决策（v2.3）：放弃所有局部状态更新方案（乐观更新、setRenderItems、Zustand setState），
+   * 直接调用 loadItems() 从 DB 全量重新加载。这是已验证可工作的唯一路径（刷新按钮即用此逻辑）。
+   *
+   * 备选架构：若后续需要优化性能，可考虑 QuickPick 复用 MainWindow 的 Zustand store 订阅模式，
+   * 通过 IPC 同步 store 而非各自维护独立状态。当前方案优先保证功能正确性。
    */
   const handleFav = async (item: ClipboardItem) => {
-    const updated = await window.electronAPI?.toggleFavorite(item.id);
-    if (updated) {
-      setRenderItems((prev) => prev.map((it) => (it.id === item.id ? (updated as ClipboardItem) : it)));
-    }
+    await window.electronAPI?.toggleFavorite(item.id);
+    await loadItems();
   };
 
   /**
-   * 置顶切换 — 与 handleFav 同样的 await IPC 返回值模式
+   * 置顶切换 — 同 handleFav 策略
    */
   const handlePin = async (item: ClipboardItem) => {
-    const updated = await window.electronAPI?.togglePin(item.id);
-    if (updated) {
-      setRenderItems((prev) => prev.map((it) => (it.id === item.id ? (updated as ClipboardItem) : it)));
-    }
+    await window.electronAPI?.togglePin(item.id);
+    await loadItems();
   };
 
   //
