@@ -1,0 +1,84 @@
+{
+  "name": "history-clipboard",
+  "version": "0.1.0",
+  "description": "Windows 历史剪贴板管理工具 — 轻量、快速、可控",
+  "author": "WorkBuddy",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev:renderer": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && tsc -p tsconfig.node.json && node scripts/start-electron.cjs",
+    "start": "npm run build && node scripts/start-electron.cjs",
+    "build": "tsc -p tsconfig.node.json && vite build",
+    "build:win": "npm run build && electron-builder --win",
+    "lint": "eslint src/ --ext .ts,.tsx",
+    "lint:fix": "eslint src/ --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6",
+    "better-sqlite3": "^11.7.0",
+    "i18next": "^26.3.1",
+    "react-i18next": "^17.0.8"
+  },
+  "devDependencies": {
+    "@ant-design/icons": "^5.5.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "antd": "^5.22.0",
+    "concurrently": "^9.1.0",
+    "electron": "^28.2.0",
+    "electron-builder": "^25.1.8",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "prettier": "^3.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8",
+    "wait-on": "^8.0.0",
+    "zustand": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.workbuddy.history-clipboard",
+    "productName": "History Clipboard",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "resources/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
