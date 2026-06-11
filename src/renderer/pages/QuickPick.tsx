@@ -1,21 +1,21 @@
 /**
  * History Clipboard — QuickPick 浮窗
- * @version 1.2
+ * @version 2.0
  * @date 2026-06-11
+ * @description 原生 div 列表渲染，弃用 Ant Design List/Paragraph
  *
  * 修订记录：
+ *   v2.0  2026-06-11  WorkBuddy  重构：弃用 AD List/Paragraph，原生 div + CSS line-clamp
  *   v1.2  2026-06-11  WorkBuddy  乐观更新、forceUpdate 刷新、事件代理修复
  *   v1.1  2026-06-11  WorkBuddy  修复 Zustand setItems 函数式更新问题
  *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
-import React, { useEffect, useRef, useState, useCallback, useReducer } from 'react';
-import { Input, List, Typography, Tag } from 'antd';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Input, Tag } from 'antd';
 import { SearchOutlined, StarOutlined, StarFilled, PushpinOutlined, PushpinFilled, ReloadOutlined } from '@ant-design/icons';
 import { useClipboardStore } from '../stores/clipboardStore';
 import type { ClipboardItem } from '../../shared/types';
-
-const { Paragraph } = Typography;
 
 function fmtTime(dateStr: string): string {
   const now = Date.now();
@@ -42,7 +42,6 @@ const QuickPick: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<any>(null);
-  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
   const { items, setItems, addItem, loading, setLoading } = useClipboardStore();
 
   const loadItems = useCallback(async () => {
@@ -121,7 +120,6 @@ const QuickPick: React.FC = () => {
     const optimistic = { ...item, is_favorite: item.is_favorite ? 0 : 1 } as ClipboardItem;
     const cur = useClipboardStore.getState().items;
     useClipboardStore.setState({ items: cur.map((it) => (it.id === item.id ? optimistic : it)) });
-    forceUpdate();
     window.electronAPI?.toggleFavorite(item.id);
   };
 
@@ -129,7 +127,6 @@ const QuickPick: React.FC = () => {
     const optimistic = { ...item, is_pinned: item.is_pinned ? 0 : 1 } as ClipboardItem;
     const cur = useClipboardStore.getState().items;
     useClipboardStore.setState({ items: cur.map((it) => (it.id === item.id ? optimistic : it)) });
-    forceUpdate();
     window.electronAPI?.togglePin(item.id);
   };
 
@@ -158,27 +155,24 @@ const QuickPick: React.FC = () => {
       </div>
 
       <div className="quickpick-list">
-        <List
-          loading={loading}
-          dataSource={filtered}
-          renderItem={(item, idx) => {
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 20, color: '#999', fontSize: 12 }}>加载中...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 20, color: '#999', fontSize: 12 }}>无记录</div>
+        ) : (
+          filtered.map((item, idx) => {
             const sel = idx === selectedIdx;
             return (
               <div
+                key={item.id ?? idx}
                 className={`quickpick-item ${sel ? 'selected' : ''}`}
                 style={{ background: sel ? undefined : itemBg(item) }}
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest('.item-actions')) return;
-                  handleCopy(item);
-                }}
                 onMouseEnter={() => setSelectedIdx(idx)}
               >
-                <div className="item-content">
-                  <Paragraph ellipsis={{ rows: 2 }} style={{ margin: 0, fontSize: 12, lineHeight: '18px' }}>
-                    {gist(item) || '(空)'}
-                  </Paragraph>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                    <span style={{ fontSize: 10, color: '#999' }}>{fmtTime(item.created_at)}</span>
+                <div className="item-content" onClick={() => handleCopy(item)}>
+                  <div className="item-text">{gist(item) || '(空)'}</div>
+                  <div className="item-meta">
+                    <span className="item-time">{fmtTime(item.created_at)}</span>
                     {item.source_app && item.source_app !== 'Unknown' && (
                       <Tag style={{ fontSize: 9, lineHeight: '14px', padding: '0 3px', margin: 0 }}>{item.source_app.substring(0, 10)}</Tag>
                     )}
@@ -199,8 +193,8 @@ const QuickPick: React.FC = () => {
                 </div>
               </div>
             );
-          }}
-        />
+          })
+        )}
       </div>
     </div>
   );

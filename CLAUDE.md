@@ -1,7 +1,7 @@
 # CLAUDE.md — History Clipboard
 
-> 版本：v1.1 | 日期：2026-06-11
-> 状态：MVP 实现阶段，QuickPick 待重构（B9）
+> 版本：v1.2 | 日期：2026-06-11
+> 状态：MVP 实现阶段，QuickPick 重构完成，B1-B11 全部解决
 
 ## 项目定位
 
@@ -95,7 +95,7 @@ history-clipboard/
 - [x] 设计文档完成（4 份）
 - [x] 工程骨架搭建
 - [x] src/ 模块实现（MVP）
-- [x] 浮窗 UI 实现（QuickPick，待重构 B9）
+- [x] 浮窗 UI 实现（QuickPick v2.0 — 原生 div 重构完成）
 - [x] 主窗口 UI 实现（MainWindow，2Tab 布局）
 - [x] 设置面板实现
 - [ ] 测试编写
@@ -115,5 +115,6 @@ history-clipboard/
 
 | 版本 | 日期 | 修改内容 | 作者 |
 |------|------|---------|------|
+| v1.2 | 2026-06-11 | QuickPick 原生 div 重构完成，B1-B11 全部解决 | WorkBuddy |
 | v1.1 | 2026-06-11 | 更新为 MVP 实现状态，新增跨窗口同步、QuickPick 重构方案 | WorkBuddy |
 | v1.0 | 2026-06-09 | 初始版本，工程骨架搭建完成 | WorkBuddy |
