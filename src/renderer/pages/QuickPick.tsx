@@ -1,11 +1,12 @@
 /**
  * History Clipboard — QuickPick 浮窗
- * @version 2.1
+ * @version 2.2
  * @date 2026-06-11
- * @description 原生 div 列表渲染，React useState 管理渲染状态，Zustand store 仅做跨窗口同步
+ * @description 原生 div 列表渲染；handleFav/Pin 采用 await IPC 返回值模式（与 MainWindow 一致）
  *
  * 修订记录：
- *   v2.1  2026-06-11  WorkBuddy  B9 修复：用 useState 作渲染源替代直接 setState，保证 React 重渲染
+ *   v2.2  2026-06-11  WorkBuddy  B9 最终修复：放弃乐观更新，改用 await IPC 返回值（对齐 MainWindow）
+ *   v2.1  2026-06-11  WorkBuddy  尝试 useState 渲染源 + 乐观更新（失败：广播竞态）
  *   v2.0  2026-06-11  WorkBuddy  重构：弃用 AD List/Paragraph，原生 div + CSS line-clamp
  *   v1.2  2026-06-11  WorkBuddy  乐观更新、forceUpdate 刷新、事件代理修复
  *   v1.1  2026-06-11  WorkBuddy  修复 Zustand setItems 函数式更新问题
@@ -15,7 +16,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Input, Tag } from 'antd';
 import { SearchOutlined, StarOutlined, StarFilled, PushpinOutlined, PushpinFilled, ReloadOutlined } from '@ant-design/icons';
-import { useClipboardStore } from '../stores/clipboardStore';
 import type { ClipboardItem } from '../../shared/types';
 
 function fmtTime(dateStr: string): string {
@@ -44,29 +44,16 @@ const QuickPick: React.FC = () => {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<any>(null);
 
-  // ================================================================
   // 渲染状态：本地 useState 管理，React 原生 setState 保证重渲染
-  // Zustand store 仅作为数据源，不直接用于渲染
-  // ================================================================
   const [renderItems, setRenderItems] = useState<ClipboardItem[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // 从 store 拉取最新数据并同步到本地渲染状态
-  const syncFromStore = useCallback(() => {
-    const storeItems = useClipboardStore.getState().items;
-    setRenderItems(storeItems);
-  }, []);
 
   const loadItems = useCallback(async () => {
     if (!window.electronAPI) return;
     setLoading(true);
     try {
       const data = await window.electronAPI.getHistory({ limit: 50 });
-      const list = data as ClipboardItem[];
-      // 先更新 store（供 MainWindow 等使用）
-      useClipboardStore.setState({ items: list, loading: false });
-      // 再更新本地渲染状态 → 保证 React 重渲染
-      setRenderItems(list);
+      setRenderItems((data as ClipboardItem[]) ?? []);
     } catch (e) {
       console.error('loadItems:', e);
     } finally {
@@ -148,39 +135,27 @@ const QuickPick: React.FC = () => {
   };
 
   /**
-   * 收藏切换（乐观更新）
+   * 收藏切换 — await IPC 返回值模式（与 MainWindow 一致）
    *
-   * 关键：直接用 setRenderItems(prev => ...) 更新本地渲染状态。
-   * React 的 useState setter 100% 触发重渲染，不依赖 Zustand 订阅机制。
-   * 同时更新 Zustand store（内存中），供下一次 loadItems 或其他窗口读取。
+   * 关键：await 等待 IPC 完成 + DB commit，用主进程返回的真实数据更新渲染状态。
+   * 不依赖乐观更新，不依赖 broadcast 回写，避免竞态条件。
+   * 跨窗口同步由 onItemUpdated listener 独立处理（当其他窗口 toggle 时）。
    */
-  const handleFav = (item: ClipboardItem) => {
-    const optimistic = { ...item, is_favorite: item.is_favorite ? 0 : 1 } as ClipboardItem;
-
-    // 1. 本地渲染状态立即更新 → React 保证重渲染
-    setRenderItems((prev) => prev.map((it) => (it.id === item.id ? optimistic : it)));
-
-    // 2. 同步更新 Zustand store（供其他模块读取最新状态）
-    const storeCur = useClipboardStore.getState().items;
-    useClipboardStore.setState({ items: storeCur.map((it) => (it.id === item.id ? optimistic : it)) });
-
-    // 3. 异步通知主进程 → DB 写入 → 广播其他窗口
-    window.electronAPI?.toggleFavorite(item.id);
+  const handleFav = async (item: ClipboardItem) => {
+    const updated = await window.electronAPI?.toggleFavorite(item.id);
+    if (updated) {
+      setRenderItems((prev) => prev.map((it) => (it.id === item.id ? (updated as ClipboardItem) : it)));
+    }
   };
 
   /**
-   * 置顶切换（乐观更新）
-   * 原理同 handleFav
+   * 置顶切换 — 与 handleFav 同样的 await IPC 返回值模式
    */
-  const handlePin = (item: ClipboardItem) => {
-    const optimistic = { ...item, is_pinned: item.is_pinned ? 0 : 1 } as ClipboardItem;
-
-    setRenderItems((prev) => prev.map((it) => (it.id === item.id ? optimistic : it)));
-
-    const storeCur = useClipboardStore.getState().items;
-    useClipboardStore.setState({ items: storeCur.map((it) => (it.id === item.id ? optimistic : it)) });
-
-    window.electronAPI?.togglePin(item.id);
+  const handlePin = async (item: ClipboardItem) => {
+    const updated = await window.electronAPI?.togglePin(item.id);
+    if (updated) {
+      setRenderItems((prev) => prev.map((it) => (it.id === item.id ? (updated as ClipboardItem) : it)));
+    }
   };
 
   //
