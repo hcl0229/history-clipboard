@@ -1,0 +1,126 @@
+# History Clipboard — 执行计划 v6
+
+> 版本：v6 | 日期：2026-06-11 | 状态：B1-B11 已解决，QuickPick 重构排队中
+
+---
+
+## 当前阶段：QuickPick 重构
+
+**目标**：解决 B9（图标点击无反应）+ B11（窗口拖拽）。
+
+**方案**（详见 [ui-design.md](./ui-design.md) v2.0）：
+1. QuickPick 列表从 `<List>` + `<Paragraph>` 改为原生 `<div>` + CSS
+2. 事件直接 `onClick`，不嵌套 `stopPropagation`
+3. 标题栏加 `-webkit-app-region: drag`
+
+**涉及文件**：
+- `src/renderer/pages/QuickPick.tsx` — 列表渲染重写
+- `src/renderer/styles/global.css` — 拖拽 CSS（已加）
+
+---
+
+## 🐛 Bug 追踪表
+
+| # | 类型 | 描述 | 提出时间 | 优先级 | 状态 | 修复方案 |
+|---|------|------|---------|--------|------|---------|
+| B1 | Bug | 复制后不自动刷新 (QuickPick) | 06-11 | P0 | ✅ | `setItems` 不支持函数式更新，改用 `addItem` |
+| B2 | Bug | 复制后不自动刷新 (MainWindow) | 06-11 | P0 | ✅ | MainWindow 缺少 `onNewItem` 监听 |
+| B3 | Bug | 统计数与列表对不上 | 06-11 | P0 | ✅ | stats 改为从 items useMemo 派生 |
+| B4 | Bug | 左侧列表无滚动条 | 06-11 | P0 | ✅ | 替换 Ant Sider 为 div，加 minHeight:0 |
+| B5 | 优化 | 置顶不应独立 Tab | 06-11 | P1 | ✅ | 2Tab 剪切板/收藏、淡红/浅黄背景色区分 |
+| B6 | Bug | 主界面不显示收藏/置顶图标 + 置顶取消不掉 | 06-11 | P0 | ✅ | 列表始终显图标、selected 同步更新 |
+| B7 | Bug | 主界面列表图标不可点击 | 06-11 | P0 | ✅ | 图标加 onClick → handleFav/handlePin |
+| B8 | 优化 | 快速入口图标太淡 | 06-11 | P2 | ✅ | 颜色 #bfbfbf→#999，尺寸 13→14px |
+| B9 | Bug | 快速入口收藏/置顶后不刷新 | 06-11 | P0 | ✅ | stopPropagation 冲突 + e.target.closest 替代 + forceUpdate 兜底 |
+| B10 | Bug | 快速入口收藏/置顶后主界面不同步 | 06-11 | P0 | ✅ | 新增 clipboard:itemUpdated 广播，preload 加 onItemUpdated |
+| B11 | Bug | 快速入口无法拖拽移动窗口 | 06-11 | P1 | ✅ | QuickPick header 加 -webkit-app-region: drag |
+
+---
+
+## B9 分析：QuickPick 异步 setState 不触发渲染
+
+**现象**：QuickPick 点 ⭐/📌 → IPC 调用成功 → 但图标不变。
+
+**根因**：`async` 函数中 `getState() + setState()` 可能在 React 批量更新中丢失。
+
+**方案**：**乐观更新** — 先改 UI，再发 IPC，失败则回滚。
+
+---
+
+## B10 分析：跨窗口状态不同步
+
+**现象**：QuickPick 收藏后 → 主界面列表仍显示未收藏状态 → 需手动刷新。
+
+**根因**：QuickPick 和 MainWindow 是**独立 BrowserWindow** → 各自独立的 Zustand store。DB 更新了但另一窗口不知情。
+
+**方案**：新增 `clipboard:itemUpdated` IPC 广播通道。toggle 后主进程 `broadcast` 给所有窗口。渲染进程监听此事件更新本地 store。
+
+**设计变更**：需更新 `docs/architecture.md` 的 IPC 通道表。
+
+---
+
+## Issue B3: 统计数与列表对不上
+
+**现象**：右侧面板 "总 0 · 收藏 0 · 置顶 0" 始终显示 0，但左侧实际有数据。
+
+**根因**：`stats` 是独立状态字段，只在 `addItem` 时 +1。`load` 用 `setItems` 直接替换整个数组，不更新 `stats`。两个数据源不同步。
+
+**修复方案**：不维护独立 `stats` 字段，直接从 `items` 数组派生：
+```
+total     = items.length
+favorites = items.filter(it => it.is_favorite).length  
+pinned    = items.filter(it => it.is_pinned).length
+```
+
+**涉及文件**：`src/renderer/pages/MainWindow.tsx`
+
+---
+
+## Issue B4: 左侧列表无滚动条
+
+**现象**：条目多了以后，"清空所有"按钮被推到屏幕外面，列表区域不出现滚动条。
+
+**根因**：`Sider` 容器内部布局没有给列表区域设置 `overflow: auto` 和固定高度。Ant Design `Layout.Sider` 的默认行为导致内容溢出。
+
+**修复方案**：
+- 列表区域容器加 `flex: 1; overflow-y: auto; min-height: 0;`
+- 确保 Sider 使用 `display: flex; flex-direction: column; height: 100vh;`
+- 底部按钮栏设置 `flex-shrink: 0;`
+
+**涉及文件**：`src/renderer/pages/MainWindow.tsx`
+
+---
+
+## 修复顺序
+
+```
+B3 (统计数对不上) → B4 (滚动条) → B5 (置顶布局) → B6 (00 + 空白)
+```
+
+每修一个，构建 + 你验证，通过后进入下一个。
+
+---
+
+## 已完成
+
+| # | 描述 | 修复内容 |
+|---|------|---------|
+| B1 | QuickPick 不自动刷新 | `setItems(fn)` → `addItem(item)` |
+| B2 | MainWindow 不自动刷新 | 新增 `onNewItem` useEffect |
+
+## 后续排队
+
+| # | 内容 |
+|---|------|
+| P4 | 国际化 (i18n) — 翻译文件已就绪 |
+| P5 | 暗色主题 |
+| P6 | 文档同步 |
+| P7 | 图标 + 打包 |
+
+---
+
+## 修订记录
+
+| 版本 | 日期 | 修改内容 | 作者 |
+|------|------|---------|------|
+| v6 | 2026-06-11 | B1-B11 追踪表、QuickPick 重构阶段、B9/B10 根因分析 | WorkBuddy |
