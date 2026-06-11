@@ -1,7 +1,7 @@
 # History Clipboard — 界面设计 v2
 
-> 版本：v2.1 | 日期：2026-06-11
-> 状态：QuickPick 原生 div 重构已实现 ✅
+> 版本：v2.2 | 日期：2026-06-11
+> 状态：QuickPick 重构完成 ✅（v2.1 双向修复 B9+B11）
 
 ---
 
@@ -55,11 +55,14 @@
 **❌ 废弃**：Ant Design `<List>` + `<Paragraph>` 渲染列表项。
 **原因**：AD 组件内部事件机制与自定义 onClick 冲突，经过 5 轮修复仍无法正常触发星标/图钉点击。
 
-**✅ 新方案**：用原生 `<div>` + CSS 替换：
+**✅ 新方案（v2.0）**：用原生 `<div>` + CSS 替换。
+**✅ v2.1 修复**：`useState` 本地渲染状态替代直接 `useClipboardStore.setState()`，保证 React 重渲染。
+
 - 列表：`<div>` + `.map()` 代替 `<List>`
 - 文本截断：CSS `text-overflow: ellipsis` 代替 `<Paragraph ellipsis>`
-- 点击：直接 `onClick` 在 `<div>` 上，无 `stopPropagation` 嵌套
-- 图标：`<span onClick={handleFav}>` 包住 `<StarOutlined/>`
+- 点击分离：`.item-content onClick` → 复制，`.item-actions span onClick` → 收藏/置顶
+- **渲染源**：React `useState(renderItems)` 作为渲染源，乐观更新直接走 `setRenderItems(prev => ...)` 保证 React 100% 重渲染
+- **拖拽**：顶部 14px `.quickpick-drag-handle` 专用于窗口拖拽
 
 ### 3.4 交互行为
 
@@ -127,6 +130,7 @@ QuickPick 窗口 `frame: false`，标题区域使用 CSS `-webkit-app-region: dr
 
 | 版本 | 日期 | 修改内容 | 作者 |
 |------|------|---------|------|
+| v2.2 | 2026-06-11 | §3.2 新增拖拽手柄(14px)，§3.3 标注 v2.1 useState 渲染修复 | WorkBuddy |
 | v2.1 | 2026-06-11 | §3.3 原生 div 重构已实现，废弃方案标记为已完成 | WorkBuddy |
 | v2.0 | 2026-06-11 | 基于实际情况重写：原生 div 替代 AD List、2Tab 主窗口、色彩系统 | WorkBuddy |
 | v1.0 | 2026-06-09 | 初始版本，界面设计 | WorkBuddy |

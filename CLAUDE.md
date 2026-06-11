@@ -1,7 +1,7 @@
 # CLAUDE.md — History Clipboard
 
 > 版本：v1.2 | 日期：2026-06-11
-> 状态：MVP 实现阶段，QuickPick 重构完成，B1-B11 全部解决
+> 状态：MVP 实现阶段，QuickPick B9+B11 双向修复完成
 
 ## 项目定位
 
