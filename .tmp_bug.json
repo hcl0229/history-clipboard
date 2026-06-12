@@ -1,9 +1,0 @@
-`_record_id` is metadata for record operations, not a table field.
-
-| _record_id | ID | 标题 | 根因 | 修复日期 | 修复方案 | 类型 | 优先级 | 提出日期 | 状态 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| recvmlsPvuPDc9 | TEST-01 |  |  |  |  |  |  |  | ["✅ 已修复"] |
-| recvmltJAlq9xk | B1 | 复制后 QuickPick 不自动刷新 | setItems不支持函数式更新 | 06-11 | 改用 addItem | ["Bug"] | ["P0"] | 06-11 | ["✅ 已修复"] |
-| recvmltJAlIUaC | B2 | 复制后 MainWindow 不自动刷新 | 缺少 onNewItem 监听 | 06-11 | 新增 useEffect | ["Bug"] | ["P0"] | 06-11 | ["✅ 已修复"] |
-
-Meta: count=3; has_more=true; record_scope=all_records; field_scope=all_fields
