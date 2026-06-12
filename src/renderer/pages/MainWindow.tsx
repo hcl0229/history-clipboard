@@ -1,9 +1,10 @@
 /**
  * History Clipboard — 主窗口
- * @version 1.5
+ * @version 1.6
  * @date 2026-06-12
  *
  * 修订记录：
+ *   v1.6  2026-06-12  WorkBuddy  CSS 类化重构：inline styles → 语义化 CSS 类 + 暗色主题适配
  *   v1.5  2026-06-12  WorkBuddy  i18n 接入：useTranslation + 所有硬编码中文替换为 t() 调用
  *   v1.4  2026-06-11  WorkBuddy  列表始终显示置顶/收藏图标、selected 同步更新
  *   v1.3  2026-06-11  WorkBuddy  2Tab 剪切板/收藏、置顶始终最上、背景色区分
@@ -42,10 +43,11 @@ function gist(item: ClipboardItem, len = 40): string {
   return item.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, len);
 }
 
-function itemBg(item: ClipboardItem): string {
-  if (item.is_pinned) return 'rgba(255,77,79,0.07)';
-  if (item.is_favorite) return 'rgba(250,173,20,0.08)';
-  return 'transparent';
+/** 返回列表项的附加 CSS 类名（置顶/收藏 → pinned/favorite） */
+function itemClass(item: ClipboardItem): string {
+  if (item.is_pinned) return 'pinned';
+  if (item.is_favorite) return 'favorite';
+  return '';
 }
 
 const TAB_CLIPBOARD = 'clipboard';
@@ -159,11 +161,11 @@ const MainWindow: React.FC = () => {
 
   return (
     <AntApp>
-      <div style={{ height: '100vh', display: 'flex' }}>
+      <div className="mw-layout">
         {/* 左侧栏 */}
-        <div style={{ width: 260, background: '#fafafa', display: 'flex', flexDirection: 'column', borderRight: '1px solid #f0f0f0', flexShrink: 0 }}>
+        <div className="mw-sidebar">
           {/* 搜索 + Tab */}
-          <div style={{ padding: 8, flexShrink: 0 }}>
+          <div className="mw-sidebar-header">
             <Input
               prefix={<SearchOutlined style={{ color: '#999' }} />}
               placeholder={t('main.searchPlaceholder')}
@@ -171,68 +173,58 @@ const MainWindow: React.FC = () => {
               onChange={(e) => setSearch(e.target.value)}
               size="small" allowClear
             />
-            <div style={{ display: 'flex', gap: 2, marginTop: 6 }}>
+            <div className="mw-tab-bar">
               {tabs.map((t) => (
                 <button
                   key={t.key}
+                  className={`mw-tab-btn${tab === t.key ? ' active' : ''}`}
                   onClick={() => { setTab(t.key); setSelected(null); }}
-                  style={{
-                    flex: 1, padding: '4px 0', textAlign: 'center', fontSize: 12,
-                    border: 'none', borderRadius: 4, cursor: 'pointer',
-                    background: tab === t.key ? '#1677ff' : 'transparent',
-                    color: tab === t.key ? '#fff' : '#666',
-                    fontWeight: tab === t.key ? 500 : 400,
-                  }}
                 >
-                  {t.label} <span style={{ opacity: tab === t.key ? 0.8 : 0.5, fontSize: 11 }}>{t.count}</span>
+                  {t.label} <span className="mw-tab-count">{t.count}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* 列表 */}
-          <div style={{ flex: 1, overflow: 'auto', padding: '2px 0', minHeight: 0 }}>
+          <div className="mw-list">
             {listData.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', color: '#bbb', fontSize: 12 }}>
+              <div className="mw-list-empty">
                 {tab === TAB_FAVORITES ? t('main.noFavorites') : t('main.noData')}
               </div>
             ) : (
-              listData.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setSelected(item)}
-                  style={{
-                    padding: '6px 10px', margin: '1px 4px', borderRadius: 4, cursor: 'pointer',
-                    borderLeft: selected?.id === item.id ? '3px solid #1677ff' : '3px solid transparent',
-                    background: selected?.id === item.id ? 'rgba(22,119,255,0.12)' : itemBg(item),
-                    fontSize: 12,
-                  }}
-                >
-                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {gist(item, 35) || i18n.t('quickpick.empty')}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
-                    <span style={{ fontSize: 10, color: '#999' }}>{fmtTime(item.created_at)}</span>
-                    <span style={{ display: 'flex', gap: 3 }} onClick={(e) => e.stopPropagation()}>
-                      <span onClick={() => handlePin(item)} style={{ cursor: 'pointer' }}>
-                        {item.is_pinned
-                          ? <PushpinFilled style={{ color: '#ff4d4f', fontSize: 12 }} />
-                          : <PushpinOutlined style={{ color: '#bbb', fontSize: 12 }} />}
+              listData.map((item) => {
+                const sel = selected?.id === item.id;
+                const cls = ['mw-list-item', sel ? 'active' : '', itemClass(item)]
+                  .filter(Boolean).join(' ');
+                return (
+                  <div key={item.id} className={cls} onClick={() => setSelected(item)}>
+                    <div className="mw-item-text">
+                      {gist(item, 35) || i18n.t('quickpick.empty')}
+                    </div>
+                    <div className="mw-item-meta">
+                      <span className="mw-item-time">{fmtTime(item.created_at)}</span>
+                      <span className="mw-item-actions" onClick={(e) => e.stopPropagation()}>
+                        <span onClick={() => handlePin(item)}>
+                          {item.is_pinned
+                            ? <PushpinFilled style={{ color: '#ff4d4f', fontSize: 12 }} />
+                            : <PushpinOutlined style={{ color: '#bbb', fontSize: 12 }} />}
+                        </span>
+                        <span onClick={() => handleFav(item)}>
+                          {item.is_favorite
+                            ? <StarFilled style={{ color: '#faad14', fontSize: 12 }} />
+                            : <StarOutlined style={{ color: '#bbb', fontSize: 12 }} />}
+                        </span>
                       </span>
-                      <span onClick={() => handleFav(item)} style={{ cursor: 'pointer' }}>
-                        {item.is_favorite
-                          ? <StarFilled style={{ color: '#faad14', fontSize: 12 }} />
-                          : <StarOutlined style={{ color: '#bbb', fontSize: 12 }} />}
-                      </span>
-                    </span>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {/* 底部按钮 */}
-          <div style={{ padding: 6, display: 'flex', gap: 6, borderTop: '1px solid #f0f0f0', flexShrink: 0 }}>
+          <div className="mw-footer">
             <Popconfirm title={t('main.clearConfirm')} onConfirm={handleClear}>
               <Button size="small" icon={<ClearOutlined />} danger block>{t('main.clearAll')}</Button>
             </Popconfirm>
@@ -241,10 +233,10 @@ const MainWindow: React.FC = () => {
         </div>
 
         {/* 右侧详情 */}
-        <div style={{ flex: 1, background: '#fff', display: 'flex', flexDirection: 'column' }}>
+        <div className="mw-detail">
           {selected ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <div style={{ padding: '6px 12px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <div className="mw-detail-header">
                 <Text type="secondary" style={{ fontSize: 11 }}>
                   {selected.created_at} | {selected.source_app || 'Unknown'}
                 </Text>
@@ -263,18 +255,18 @@ const MainWindow: React.FC = () => {
                   </Popconfirm>
                 </div>
               </div>
-              <div style={{ flex: 1, padding: 10, overflow: 'auto' }}>
+              <div className="mw-detail-body">
                 <Paragraph copyable ellipsis={{ rows: 20, expandable: true }} style={{ fontSize: 13 }}>
                   {selected.content_type === 'image' ? i18n.t('quickpick.image') : selected.content.replace(/<[^>]+>/g, '\n').replace(/&nbsp;/g, ' ')}
                 </Paragraph>
               </div>
             </div>
           ) : (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center', color: '#bbb' }}>
-                <div style={{ fontSize: 28, marginBottom: 6 }}>📋</div>
-                <div style={{ fontSize: 12 }}>{t('main.selectHint')}</div>
-                <div style={{ fontSize: 10, marginTop: 6, lineHeight: 1.6 }}>
+            <div className="mw-detail-empty">
+              <div style={{ textAlign: 'center' }}>
+                <div className="mw-empty-icon">📋</div>
+                <div className="mw-empty-hint">{t('main.selectHint')}</div>
+                <div className="mw-empty-stats">
                   {t('main.stats.total')} {stats.total} · {t('main.stats.pin')} {stats.pinned} · {t('main.stats.fav')} {stats.favorites}
                 </div>
               </div>

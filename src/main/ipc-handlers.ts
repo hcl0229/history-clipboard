@@ -105,6 +105,13 @@ export function registerIpcHandlers(): void {
     setSetting(params.key, params.value);
   });
 
+  ipcMain.handle('settings:updateHotkey', (_e, params: { oldKey: string; newKey: string }) => {
+    const { applyHotkeyChange } = require('./index');
+    const ok = applyHotkeyChange(params.oldKey, params.newKey);
+    if (ok) setSetting('hotkey', params.newKey);
+    return ok;
+  });
+
   // ==================== 开机自启 ====================
 
   ipcMain.handle('autoLaunch:get', async () => {

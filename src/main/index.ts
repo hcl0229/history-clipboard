@@ -10,9 +10,10 @@
 
 import { app, BrowserWindow, Tray, Menu, nativeImage, globalShortcut, screen } from 'electron';
 import path from 'path';
-import { initDatabase, closeDatabase } from './database';
+import { initDatabase, closeDatabase, getSetting } from './database';
 import { startClipboardMonitor, stopClipboardMonitor } from './clipboard-monitor';
 import { registerIpcHandlers } from './ipc-handlers';
+import { registerHotkeys, unregisterHotkeys, updateHotkey } from './hotkey-manager';
 
 // ==================== 全局引用 ====================
 let mainWindow: BrowserWindow | null = null;
@@ -133,13 +134,18 @@ function createTray(): void {
 
 // ==================== 快捷键 ====================
 
-function registerHotkey(): void {
-  const ok = globalShortcut.register('Ctrl+Shift+V', () => {
-    toggleQuickPick();
-  });
-  if (!ok) {
-    console.warn('[Hotkey] Ctrl+Shift+V registration failed');
+/** 从 DB 读取快捷鍵并注册（首次启动），默认 Ctrl+Shift+V */
+function initHotkey(): void {
+  const saved = getSetting('hotkey') || 'Ctrl+Shift+V';
+  if (quickPickWindow) {
+    registerHotkeys(quickPickWindow, saved);
   }
+}
+
+/** 运行时更新快捷键（用户在设置中修改后调用） */
+export function applyHotkeyChange(oldKey: string, newKey: string): boolean {
+  if (!quickPickWindow) return false;
+  return updateHotkey(oldKey, newKey, quickPickWindow);
 }
 
 function toggleQuickPick(): void {
@@ -177,7 +183,7 @@ app.whenReady().then(() => {
   mainWindow = createMainWindow();
   quickPickWindow = createQuickPickWindow();
   createTray();
-  registerHotkey();
+  initHotkey();
   startClipboardMonitor();
 
   import('./auto-launch').then((m) => m.initAutoLaunch());

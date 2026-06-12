@@ -89,6 +89,7 @@ export interface ElectronAPI {
   getSetting: (key: string) => Promise<string | null>;
   getAllSettings: () => Promise<Record<string, string>>;
   setSetting: (key: string, value: string) => Promise<void>;
+  updateHotkey: (oldKey: string, newKey: string) => Promise<boolean>;
   getAutoLaunch: () => Promise<boolean>;
   setAutoLaunch: (enabled: boolean) => Promise<void>;
   onNewItem: (callback: (item: ClipboardItem) => void) => () => void;

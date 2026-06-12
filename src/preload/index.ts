@@ -41,6 +41,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('settings:getAll'),
   setSetting: (key: string, value: string) =>
     ipcRenderer.invoke('settings:set', { key, value }),
+  updateHotkey: (oldKey: string, newKey: string) =>
+    ipcRenderer.invoke('settings:updateHotkey', { oldKey, newKey }),
 
   // --- 开机自启 ---
   getAutoLaunch: () =>

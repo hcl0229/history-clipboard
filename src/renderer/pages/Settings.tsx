@@ -1,17 +1,18 @@
 /**
  * History Clipboard — 设置面板
- * @version 1.2
+ * @version 1.3
  * @date 2026-06-12
  *
  * 修订记录：
+ *   v1.3  2026-06-12  WorkBuddy  新增快捷键录制控件：点击捕获按键组合，实时更新全局快捷键
  *   v1.2  2026-06-12  WorkBuddy  i18n 接入 + 语言切换控件
  *   v1.1  2026-06-11  WorkBuddy  移除 i18n 语言切换、紧凑 Form 布局
  *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Form, Select, Slider, Switch, Typography } from 'antd';
+import { Form, Select, Slider, Switch, Typography, Button } from 'antd';
 import { useSettingsStore } from '../stores/settingsStore';
 import type { FontSize, RetentionDays } from '../../shared/types';
 
@@ -27,11 +28,47 @@ const ACCENTS = [
   { label: 'Pink', value: '#EB2F96' },
 ];
 
+/**
+ * 将 KeyboardEvent 转换为 Electron accelerator 格式
+ * 例如：Ctrl+Shift+V、Alt+Space、CommandOrControl+X
+ */
+function eventToAccelerator(e: KeyboardEvent): string | null {
+  // 忽略单独的修饰键
+  if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return null;
+  const parts: string[] = [];
+  if (e.ctrlKey || e.metaKey) parts.push('CommandOrControl');
+  if (e.shiftKey) parts.push('Shift');
+  if (e.altKey) parts.push('Alt');
+  // 主键：字母大写，其他保留原始
+  const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+  parts.push(key === ' ' ? 'Space' : key);
+  return parts.join('+');
+}
+
 const Settings: React.FC = () => {
   const { t } = useTranslation();
   const store = useSettingsStore();
+  const [recording, setRecording] = useState(false);
 
   useEffect(() => { store.loadFromElectron(); }, []);
+
+  // 快捷键录制：点击按钮后监听下一次按键
+  const startRecording = useCallback(() => {
+    setRecording(true);
+    const handler = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const accel = eventToAccelerator(e);
+      if (accel) {
+        const oldKey = store.hotkey;
+        store.setHotkey(accel);
+        window.electronAPI?.updateHotkey(oldKey, accel);
+      }
+      setRecording(false);
+      window.removeEventListener('keydown', handler, true);
+    };
+    window.addEventListener('keydown', handler, true);
+  }, [store.hotkey]);
 
   return (
     <div style={{ maxWidth: 380, margin: '0 auto', padding: '16px 20px' }}>
@@ -51,6 +88,17 @@ const Settings: React.FC = () => {
         <Form.Item label={t('settings.language')} style={{ marginBottom: 10 }}>
           <Select value={store.language} onChange={store.setLanguage} style={{ width: 120 }}
             options={[{ label: t('settings.zh'), value: 'zh' }, { label: t('settings.en'), value: 'en' }]} />
+        </Form.Item>
+        <Form.Item label={t('settings.hotkey')} style={{ marginBottom: 10 }}>
+          <Button
+            size="small"
+            type={recording ? 'primary' : 'default'}
+            danger={recording}
+            onClick={startRecording}
+            style={{ minWidth: 160, textAlign: 'center' }}
+          >
+            {recording ? '按下新快捷键...' : store.hotkey}
+          </Button>
         </Form.Item>
         <Form.Item label={t('settings.retention')} style={{ marginBottom: 10 }}>
           <Slider min={1} max={30} step={1} value={parseInt(store.retentionDays, 10)} onChange={(v) => store.setRetentionDays(String(v) as RetentionDays)} style={{ width: 180 }} />
