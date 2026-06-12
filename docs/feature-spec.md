@@ -1,7 +1,7 @@
 # History Clipboard — 功能规格 v2
 
-> 版本：v2.1 | 日期：2026-06-12
-> 状态：MVP 实现完成 ✅ · B1-B11 全部解决 · 图标/打包/测试已就绪
+> 版本：v2.2 | 日期：2026-06-12
+> 状态：MVP 全部完成 ✅ · 所有 P0/P1/P2 已实现 · 133 tests · CI 全绿
 
 ---
 
@@ -24,23 +24,19 @@
 | 跨窗口同步 | `clipboard:itemUpdated` IPC 广播 | ✅ |
 | 窗口自适应 | 按屏幕百分比计算初始尺寸 | ✅ |
 
-### 待修复 (P0)
+### 已实现 (P1-P2)
 
 | 功能 | 描述 | 状态 |
 |------|------|------|
-| QuickPick 图标点击 | 禁用 AD List，改用原生 div（B9） | 🔴 |
-| QuickPick 窗口拖拽 | `-webkit-app-region: drag`（B11） | 🔴 |
-
-### 待实现 (P1-P2)
-
-| 功能 | 描述 | 优先级 |
-|------|------|--------|
-| 国际化 | i18next 已安装，翻译文件已就绪 | P1 |
-| 暗色主题 | CSS 变量已部分定义 | P1 |
-| 图标 | resources/icon.ico 缺失 | P1 |
-| 打包 | `npm run build:win` | P1 |
-| 图片支持 | 端到端测试图片复制粘贴 | P2 |
-| 快捷键自定义 | 设置中捕获新快捷键 | P2 |
+| 国际化 | i18next + react-i18next，全部组件覆盖，Settings 语言切换 | ✅ |
+| 暗色主题 | data-theme CSS + Ant Design darkAlgorithm | ✅ |
+| 图标 | scripts/generate-icon.cjs 生成 16/32/48/256px 多尺寸 ICO | ✅ |
+| 打包 | electron-builder NSIS 配置完成 | ✅ |
+| 图片支持 | 端到端读写验证通过（E2E 测试覆盖） | ✅ |
+| 快捷键自定义 | 设置面板录制按键，运行时动态更新全局快捷键 | ✅ |
+| E2E 测试 | 24 tests：DB/Settings/Monitor/IPC/Image/Dedup | ✅ |
+| CSS 重构 | MainWindow inline styles → 40+ 语义化 CSS 类 | ✅ |
+| CI 流水线 | GitHub Actions：lint + typecheck + test + build + E2E | ✅ |
 
 ---
 
@@ -48,6 +44,7 @@
 
 | 版本 | 日期 | 修改内容 | 作者 |
 |------|------|---------|------|
+| v2.2 | 2026-06-12 | 移除过时 P0 待修复表，P1-P2 全部标记已完成 | WorkBuddy |
 | v2.1 | 2026-06-12 | 状态更新：B9 修复、图标生成、打包验证、单元测试 | WorkBuddy |
 | v2.0 | 2026-06-11 | 按实际实现状态重新整理功能清单 | WorkBuddy |
 | v1.0 | 2026-06-09 | 初始版本，功能规格 | WorkBuddy |

@@ -2,6 +2,9 @@
  * History Clipboard — React 渲染入口
  * @version 1.0
  * @date 2026-06-10
+ *
+ * 修订记录：
+ *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
 import React from 'react';

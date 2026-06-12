@@ -1,7 +1,7 @@
 # History Clipboard — 架构设计
 
-> 版本：v1.3 | 日期：2026-06-11
-> 状态：重构中 · QuickPick 弃用 AD List，改用原生 div
+> 版本：v1.4 | 日期：2026-06-12
+> 状态：MVP 完成 ✅ · QuickPick 原生 div 重构已完成 · i18n/暗色主题/快捷键自定义已实现
 
 ## 1. 整体架构
 
@@ -314,6 +314,7 @@ index.ts
 
 | 版本 | 日期 | 修改内容 | 作者 |
 |------|------|---------|------|
+| v1.4 | 2026-06-12 | 状态更新：重构已完成、i18n/暗色主题/快捷键自定义已实现 | WorkBuddy |
 | v1.3 | 2026-06-11 | QuickPick 弃用 AD List 改用原生 div + 关键设计决策章节 | WorkBuddy |
 | v1.2 | 2026-06-11 | 新增 Main→Renderer 推送事件表(跨窗口同步)、clipboard:itemUpdated | WorkBuddy |
 | v1.1 | 2026-06-11 | 更新为实际实现状态：i18n、异步前景检测 | WorkBuddy |

@@ -2,6 +2,9 @@
  * History Clipboard — i18n 国际化
  * @version 1.0
  * @date 2026-06-11
+ *
+ * 修订记录：
+ *   v1.0  2026-06-11  WorkBuddy  初始版本（i18next + react-i18next，zh/en 翻译文件）
  */
 
 import i18n from 'i18next';

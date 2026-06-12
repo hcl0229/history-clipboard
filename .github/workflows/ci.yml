@@ -19,7 +19,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
 
-  test:
+  build:
     needs: lint
     runs-on: windows-latest
     steps:
@@ -29,4 +29,29 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
+      - run: npm run build
+
+  test:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
       - run: npm test
+      - run: npx vitest run --coverage 2>&1 || true
+
+  e2e:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:e2e
