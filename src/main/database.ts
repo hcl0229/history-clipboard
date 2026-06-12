@@ -132,7 +132,7 @@ export function getHistory(params: {
   return getDb()
     .prepare(
       `SELECT * FROM clipboard_history ${where}
-       ORDER BY is_pinned DESC, is_favorite DESC, created_at DESC
+       ORDER BY is_pinned DESC, id DESC
        LIMIT ? OFFSET ?`,
     )
     .all(...values, limit, offset);

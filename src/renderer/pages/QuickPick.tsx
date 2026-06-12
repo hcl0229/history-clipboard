@@ -119,13 +119,17 @@ const QuickPick: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // 搜索过滤
-  const filtered = searchText
+  // 搜索过滤 + 排序（置顶优先→id 降序，收藏不参与排序）
+  const filtered = (searchText
     ? renderItems.filter((it) => {
         const t = it.content_type === 'image' ? '' : it.content.replace(/<[^>]+>/g, ' ');
         return t.toLowerCase().includes(searchText.toLowerCase());
       })
-    : renderItems;
+    : [...renderItems]
+  ).sort((a, b) => {
+    if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+    return b.id - a.id;
+  });
 
   // 键盘导航
   useEffect(() => {
