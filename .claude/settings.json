@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -Command \"$runs = gh run list --limit 3 2>$null --json conclusion,displayTitle,headBranch,status,updatedAt | ConvertFrom-Json; $latest = $runs[0]; if ($latest.status -eq 'in_progress') { Write-Host '⏳ CI 仍在运行...'; Write-Host ('  ' + $latest.displayTitle + ' — ' + $latest.status) } elseif ($latest.conclusion -eq 'failure') { Write-Host '🔴 最近 CI 失败！'; Write-Host ('  ' + $latest.displayTitle); Write-Host ('  https://github.com/hcl0229/history-clipboard/actions') } elseif ($latest.conclusion -eq 'success') { Write-Host '🟢 最近 CI 通过' }\""
+          }
+        ]
+      }
+    ]
+  }
+}

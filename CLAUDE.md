@@ -104,6 +104,14 @@ history-clipboard/
 - [x] 暗色主题完善（CSS + Ant Design darkAlgorithm）
 - [x] CI 流水线（GitHub Actions, tsc + eslint + vitest）
 
+## Hooks
+
+`.claude/settings.json` 配置了 `Stop` hook：
+- 每次会话结束自动检查最近 GitHub Actions CI 状态
+- 🔴 CI 失败 → 警告提示
+- ⏳ CI 运行中 → 提示等待
+- 🟢 CI 通过 → 静默确认
+
 ## 关键设计决策
 
 1. **为什么选 Electron？** — 企业级验证（VS Code、Slack）、剪贴板 API 成熟、外观定制灵活
