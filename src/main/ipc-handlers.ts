@@ -26,6 +26,7 @@ import {
 } from './database';
 import { enableAutoLaunch, disableAutoLaunch, isAutoLaunchEnabled } from './auto-launch';
 import { broadcast } from './clipboard-monitor';
+import { updateHotkey } from './hotkey-manager';
 
 export function registerIpcHandlers(): void {
   // ==================== 剪贴板 ====================
@@ -106,8 +107,7 @@ export function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('settings:updateHotkey', (_e, params: { oldKey: string; newKey: string }) => {
-    const { applyHotkeyChange } = require('./index');
-    const ok = applyHotkeyChange(params.oldKey, params.newKey);
+    const ok = updateHotkey(params.oldKey, params.newKey);
     if (ok) setSetting('hotkey', params.newKey);
     return ok;
   });
