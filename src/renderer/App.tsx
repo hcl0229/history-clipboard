@@ -33,6 +33,11 @@ const App: React.FC = () => {
   // 加载设置（含语言偏好）
   useEffect(() => { loadFromElectron(); }, []);
 
+  // 暗色主题：设置 data-theme 属性到 <html>，供 CSS 选择器使用
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', appTheme);
+  }, [appTheme]);
+
   // i18n 语言同步：settingsStore.language 变化时切换 i18next 语言
   useEffect(() => {
     i18n.changeLanguage(language);
