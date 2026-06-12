@@ -1,6 +1,6 @@
 # MEMORY.md — 跨会话记忆索引
 
-> 版本：v1.3 | 日期：2026-06-11
+> 版本：v1.4 | 日期：2026-06-12
 
 ## 记忆文件清单
 
@@ -10,21 +10,24 @@
 
 ## 当前状态
 
-MVP 实现阶段。后端全部通过诊断（6/7），前端 QuickPick 待重构（B9: 弃用 Ant Design List 改用原生 div）。所有设计文档已更新至最新状态。
+MVP 已完成。所有功能正常工作，CI 全绿（133 tests）。
 
-## 活跃话题
+## 已完成话题
 
-| 话题 | 状态 | 涉及文件 |
+| 话题 | 状态 | 最终方案 |
 |------|------|---------|
-| QuickPick 重构 (B9+B11) | 🔴 待实施 | QuickPick.tsx, ui-design.md |
-| 文档体系整理 | 🟢 已完成 | user-habits.md, mistakes-lessons.md, 所有 docs/ |
-| 跨窗口同步机制 | 🟢 已完成 | ipc-handlers.ts, preload/index.ts |
-| i18n 国际化接入 | 🟡 P1 排队中 | i18n.ts, locales/ |
-| 打包 + 图标 | 🟡 P1 排队中 | resources/, electron-builder |
+| QuickPick 重构 (B9+B11) | 🟢 已完成 | v2.4: 原生 div + loadItems() 全量刷新 + 14px 拖拽手柄 |
+| 跨窗口同步 | 🟢 已完成 | clipboard:itemUpdated IPC 广播 |
+| i18n 国际化接入 | 🟢 已完成 | react-i18next, App/MainWindow/QuickPick/Settings 全覆盖 |
+| 暗色主题 | 🟢 已完成 | data-theme CSS + Ant Design darkAlgorithm |
+| CI 流水线 | 🟢 已完成 | tsc + eslint + vitest, GitHub Actions |
+| 测试覆盖 | 🟢 已完成 | 133 tests (4 files): utils / clipboardStore / settingsStore / i18n |
+| 打包 | 🟡 可配置 | electron-builder NSIS 配置完成, 需管理员权限执行 |
+| 图标 | 🟢 已完成 | scripts/generate-icon.cjs 生成多尺寸 icon.ico |
 
 ## 关键提醒
 
 - **ELECTRON_RUN_AS_NODE 环境变量**：启动前必须在 CMD 执行 `set ELECTRON_RUN_AS_NODE=`
 - **先更新设计文档，再改代码** — 见 [[user-habits]]
 - **一次只改一个模块** — 见 [[mistakes-lessons]]
-- **B9 根因已定位**：Ant Design List + Paragraph 拦截点击事件，重构方案见 [[../docs/ui-design]]
+- **B9 教训**：4 次失败（乐观更新/await+setState/Zustand 订阅），最终方案是 loadItems() 全量刷新——不要过度设计，复用已验证的代码路径

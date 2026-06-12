@@ -1,7 +1,7 @@
 # CLAUDE.md — History Clipboard
 
-> 版本：v1.2 | 日期：2026-06-11
-> 状态：MVP 实现阶段，QuickPick B9+B11 双向修复完成
+> 版本：v1.3 | 日期：2026-06-12
+> 状态：MVP 完成 — B1-B11 全部解决 · i18n 已接入 · 暗色主题已实现 · CI 全绿 · 133 tests
 
 ## 项目定位
 
@@ -98,8 +98,11 @@ history-clipboard/
 - [x] 浮窗 UI 实现（QuickPick v2.0 — 原生 div 重构完成）
 - [x] 主窗口 UI 实现（MainWindow，2Tab 布局）
 - [x] 设置面板实现
-- [ ] 测试编写
-- [ ] 打包配置调通
+- [x] 测试编写（133 tests, 4 files, 全通过）
+- [x] 打包配置调通（electron-builder NSIS，需管理员权限）
+- [x] i18n 接入（中/英切换，全部组件覆盖）
+- [x] 暗色主题完善（CSS + Ant Design darkAlgorithm）
+- [x] CI 流水线（GitHub Actions, tsc + eslint + vitest）
 
 ## 关键设计决策
 
@@ -115,6 +118,7 @@ history-clipboard/
 
 | 版本 | 日期 | 修改内容 | 作者 |
 |------|------|---------|------|
+| v1.3 | 2026-06-12 | i18n 接入、暗色主题完善、CI 修复、133 tests | WorkBuddy |
 | v1.2 | 2026-06-11 | QuickPick 原生 div 重构完成，B1-B11 全部解决 | WorkBuddy |
 | v1.1 | 2026-06-11 | 更新为 MVP 实现状态，新增跨窗口同步、QuickPick 重构方案 | WorkBuddy |
 | v1.0 | 2026-06-09 | 初始版本，工程骨架搭建完成 | WorkBuddy |
