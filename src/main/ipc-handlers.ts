@@ -8,7 +8,7 @@
  *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
-import { ipcMain, clipboard, BrowserWindow } from 'electron';
+import { ipcMain, clipboard, nativeImage, BrowserWindow } from 'electron';
 import {
   getHistory,
   searchHistory,
@@ -22,7 +22,7 @@ import {
   getSetting,
   getAllSettings,
   setSetting,
-  getLastHash,
+  getDb,
 } from './database';
 import { enableAutoLaunch, disableAutoLaunch, isAutoLaunchEnabled } from './auto-launch';
 import { broadcast } from './clipboard-monitor';
@@ -75,7 +75,6 @@ export function registerIpcHandlers(): void {
     if (!item) return;
 
     if (item.content_type === 'image') {
-      const { nativeImage } = require('electron');
       clipboard.writeImage(nativeImage.createFromDataURL(item.content));
     } else if (item.content_type === 'html') {
       clipboard.writeHTML(item.content);
@@ -83,8 +82,7 @@ export function registerIpcHandlers(): void {
       clipboard.writeText(item.content);
     }
     // 更新 updated_at
-    const db = require('./database');
-    db.getDb()
+    getDb()
       .prepare("UPDATE clipboard_history SET updated_at=datetime('now','localtime') WHERE id=?")
       .run(params.id);
   });

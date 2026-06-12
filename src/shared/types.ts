@@ -39,7 +39,7 @@ export interface HistoryQueryParams {
 
 export type Theme = 'light' | 'dark';
 export type Language = 'zh' | 'en';
-export type FontSize = '12' | '14' | '16';
+export type FontSize = '12' | '13' | '14' | '15' | '16' | '17' | '18';
 export type AccentColor = '#1677FF' | '#52C41A' | '#FA8C16' | '#722ED1' | '#EB2F96' | '#13C2C2' | '#595959';
 export type RetentionDays = '1' | '3' | '7' | '14' | '30';
 
@@ -92,8 +92,12 @@ export interface ElectronAPI {
   getAutoLaunch: () => Promise<boolean>;
   setAutoLaunch: (enabled: boolean) => Promise<void>;
   onNewItem: (callback: (item: ClipboardItem) => void) => () => void;
+  onItemUpdated: (callback: (item: ClipboardItem) => void) => () => void;
   onItemsCleared: (callback: (data: { deletedCount: number }) => void) => () => void;
   onSettingChanged: (callback: (data: { key: string; value: string }) => void) => () => void;
+  onQuickPickOpened: (callback: () => void) => () => void;
+  minimizeWindow: () => Promise<void>;
+  hideWindow: () => Promise<void>;
 }
 
 declare global {

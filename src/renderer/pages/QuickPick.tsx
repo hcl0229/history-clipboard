@@ -18,6 +18,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input, Tag } from 'antd';
+import type { InputRef } from 'antd';
 import { SearchOutlined, StarOutlined, StarFilled, PushpinOutlined, PushpinFilled, ReloadOutlined } from '@ant-design/icons';
 import i18n from '../i18n';
 import type { ClipboardItem } from '../../shared/types';
@@ -47,7 +48,7 @@ const QuickPick: React.FC = () => {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const inputRef = useRef<any>(null);
+  const inputRef = useRef<InputRef>(null);
 
   // 渲染状态：本地 useState 管理，React 原生 setState 保证重渲染
   const [renderItems, setRenderItems] = useState<ClipboardItem[]>([]);

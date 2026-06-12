@@ -13,6 +13,7 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Select, Slider, Switch, Typography } from 'antd';
 import { useSettingsStore } from '../stores/settingsStore';
+import type { FontSize, RetentionDays } from '../../shared/types';
 
 const { Title } = Typography;
 
@@ -45,14 +46,14 @@ const Settings: React.FC = () => {
             options={ACCENTS.map((a) => ({ label: <span><span style={{ color: a.value }}>●</span> {a.label}</span>, value: a.value }))} />
         </Form.Item>
         <Form.Item label={`${t('settings.fontSize')}: ${store.fontSize}px`} style={{ marginBottom: 10 }}>
-          <Slider min={12} max={18} step={1} value={parseInt(store.fontSize, 10)} onChange={(v) => store.setFontSize(String(v))} style={{ width: 180 }} />
+          <Slider min={12} max={18} step={1} value={parseInt(store.fontSize, 10)} onChange={(v) => store.setFontSize(String(v) as FontSize)} style={{ width: 180 }} />
         </Form.Item>
         <Form.Item label={t('settings.language')} style={{ marginBottom: 10 }}>
           <Select value={store.language} onChange={store.setLanguage} style={{ width: 120 }}
             options={[{ label: t('settings.zh'), value: 'zh' }, { label: t('settings.en'), value: 'en' }]} />
         </Form.Item>
         <Form.Item label={t('settings.retention')} style={{ marginBottom: 10 }}>
-          <Slider min={1} max={30} step={1} value={parseInt(store.retentionDays, 10)} onChange={(v) => store.setRetentionDays(String(v))} style={{ width: 180 }} />
+          <Slider min={1} max={30} step={1} value={parseInt(store.retentionDays, 10)} onChange={(v) => store.setRetentionDays(String(v) as RetentionDays)} style={{ width: 180 }} />
         </Form.Item>
         <Form.Item label={t('settings.maxRecords')} style={{ marginBottom: 10 }}>
           <Slider min={100} max={5000} step={100} value={store.maxRecords} onChange={store.setMaxRecords} style={{ width: 180 }} />
