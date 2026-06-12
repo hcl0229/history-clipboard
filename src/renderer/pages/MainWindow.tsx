@@ -1,9 +1,10 @@
 /**
  * History Clipboard — 主窗口
- * @version 1.7
+ * @version 1.8
  * @date 2026-06-13
  *
  * 修订记录：
+ *   v1.8  2026-06-13  WorkBuddy  删除跨窗口同步(onItemDeleted)
  *   v1.7  2026-06-13  WorkBuddy  新增删除按钮 + 右键上下文菜单（收藏/置顶/删除）
  *   v1.6  2026-06-12  WorkBuddy  CSS 类化重构：inline styles → 语义化 CSS 类 + 暗色主题适配
  *   v1.5  2026-06-12  WorkBuddy  i18n 接入：useTranslation + 所有硬编码中文替换为 t() 调用
@@ -100,6 +101,16 @@ const MainWindow: React.FC = () => {
     });
     return () => unsub?.();
   }, []);
+
+  // 跨窗口同步：监听删除事件
+  useEffect(() => {
+    const unsub = window.electronAPI?.onItemDeleted((data: { id: number }) => {
+      const cur = useClipboardStore.getState().items;
+      useClipboardStore.setState({ items: cur.filter((it) => it.id !== data.id) });
+      if (selected?.id === data.id) setSelected(null);
+    });
+    return () => unsub?.();
+  }, [selected]);
 
   const stats = useMemo(() => ({
     total: items.length,

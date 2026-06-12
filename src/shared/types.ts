@@ -94,6 +94,7 @@ export interface ElectronAPI {
   setAutoLaunch: (enabled: boolean) => Promise<void>;
   onNewItem: (callback: (item: ClipboardItem) => void) => () => void;
   onItemUpdated: (callback: (item: ClipboardItem) => void) => () => void;
+  onItemDeleted: (callback: (data: { id: number }) => void) => () => void;
   onItemsCleared: (callback: (data: { deletedCount: number }) => void) => () => void;
   onSettingChanged: (callback: (data: { key: string; value: string }) => void) => () => void;
   onQuickPickOpened: (callback: () => void) => () => void;

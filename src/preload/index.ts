@@ -65,6 +65,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('clipboard:itemUpdated', handler);
     return () => ipcRenderer.removeListener('clipboard:itemUpdated', handler);
   },
+  onItemDeleted: (cb: (data: { id: number }) => void) => {
+    const handler = (_e: Electron.IpcRendererEvent, data: { id: number }) => cb(data);
+    ipcRenderer.on('clipboard:itemDeleted', handler);
+    return () => ipcRenderer.removeListener('clipboard:itemDeleted', handler);
+  },
   onItemsCleared: (cb: (data: { deletedCount: number }) => void) => {
     const handler = (_e: Electron.IpcRendererEvent, data: { deletedCount: number }) => cb(data);
     ipcRenderer.on('clipboard:itemsCleared', handler);

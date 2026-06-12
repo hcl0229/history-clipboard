@@ -59,6 +59,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('clipboard:delete', (_e, params: { id: number }) => {
     deleteItem(params.id);
+    broadcast({ id: params.id }, 'clipboard:itemDeleted');
   });
 
   ipcMain.handle('clipboard:deleteMultiple', (_e, params: { ids: number[] }) => {

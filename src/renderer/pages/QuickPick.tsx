@@ -1,10 +1,11 @@
 /**
  * History Clipboard — QuickPick 浮窗
- * @version 2.5
+ * @version 2.6
  * @date 2026-06-13
  * @description 原生 div 列表渲染；新增删除按钮 + 右键菜单（收藏/置顶/删除）
  *
  * 修订记录：
+ *   v2.6  2026-06-13  WorkBuddy  删除跨窗口同步(onItemDeleted) + 5秒定时刷新
  *   v2.5  2026-06-13  WorkBuddy  新增删除按钮 + 右键上下文菜单
  *   v2.4  2026-06-12  WorkBuddy  i18n 接入：useTranslation + 所有硬编码中文替换为 t() 调用
  *   v2.3  2026-06-12  WorkBuddy  B9 最终修复：放弃所有局部状态更新，直接 loadItems() 全量 DB 刷新
@@ -91,13 +92,31 @@ const QuickPick: React.FC = () => {
   }, []);
 
   // 跨窗口同步：其他窗口 toggle 后主进程广播 itemUpdated
-  // 这里更新本地渲染状态，保持与 MainWindow 一致
   useEffect(() => {
     const unsub = window.electronAPI?.onItemUpdated((item: unknown) => {
       const updated = item as ClipboardItem;
       setRenderItems((prev) => prev.map((it) => (it.id === updated.id ? updated : it)));
     });
     return () => unsub?.();
+  }, []);
+
+  // 跨窗口同步：删除事件
+  useEffect(() => {
+    const unsub = window.electronAPI?.onItemDeleted((data: { id: number }) => {
+      setRenderItems((prev) => prev.filter((it) => it.id !== data.id));
+    });
+    return () => unsub?.();
+  }, []);
+
+  // 定时刷新：每 5 秒从 DB 全量同步，确保与主窗口一致
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!window.electronAPI) return;
+      window.electronAPI.getHistory({ limit: 50 }).then((data) => {
+        if (data) setRenderItems(data as ClipboardItem[]);
+      }).catch(() => {});
+    }, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   // 搜索过滤
