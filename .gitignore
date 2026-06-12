@@ -50,4 +50,4 @@ npm
 *.exe
 *.msi
 *.AppImage
-echo .tmp_*.json
+.tmp_*.json
