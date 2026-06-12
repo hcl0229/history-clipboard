@@ -1,20 +1,22 @@
 /**
  * History Clipboard — 设置状态管理（Zustand）
- * @version 1.1
- * @date 2026-06-11
+ * @version 1.2
+ * @date 2026-06-12
  *
  * 修订记录：
+ *   v1.2  2026-06-12  WorkBuddy  新增 language 字段（zh/en），持久化 + 加载
  *   v1.1  2026-06-11  WorkBuddy  新增语言设置
  *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
 import { create } from 'zustand';
-import type { Theme, AccentColor, FontSize, RetentionDays } from '../../shared/types';
+import type { Theme, AccentColor, FontSize, Language, RetentionDays } from '../../shared/types';
 
 interface SettingsStore {
   theme: Theme;
   accentColor: AccentColor;
   fontSize: FontSize;
+  language: Language;
   retentionDays: RetentionDays;
   maxRecords: number;
   autoLaunch: boolean;
@@ -24,6 +26,7 @@ interface SettingsStore {
   setTheme: (v: Theme) => void;
   setAccentColor: (v: AccentColor) => void;
   setFontSize: (v: FontSize) => void;
+  setLanguage: (v: Language) => void;
   setRetentionDays: (v: RetentionDays) => void;
   setMaxRecords: (v: number) => void;
   setAutoLaunch: (v: boolean) => void;
@@ -35,6 +38,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   theme: 'light',
   accentColor: '#1677FF',
   fontSize: '13',
+  language: 'zh',
   retentionDays: '3',
   maxRecords: 1000,
   autoLaunch: false,
@@ -44,6 +48,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   setTheme: (theme) => { set({ theme }); window.electronAPI?.setSetting('theme', theme); },
   setAccentColor: (accentColor) => { set({ accentColor }); window.electronAPI?.setSetting('accentColor', accentColor); },
   setFontSize: (fontSize) => { set({ fontSize }); window.electronAPI?.setSetting('fontSize', fontSize); },
+  setLanguage: (language) => { set({ language }); window.electronAPI?.setSetting('language', language); },
   setRetentionDays: (retentionDays) => { set({ retentionDays }); window.electronAPI?.setSetting('retentionDays', retentionDays); },
   setMaxRecords: (maxRecords) => { set({ maxRecords }); window.electronAPI?.setSetting('maxRecords', String(maxRecords)); },
   setAutoLaunch: (autoLaunch) => { set({ autoLaunch }); window.electronAPI?.setAutoLaunch(autoLaunch); },
@@ -57,6 +62,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         theme: (all.theme as Theme) || 'light',
         accentColor: (all.accentColor as AccentColor) || '#1677FF',
         fontSize: (all.fontSize as FontSize) || '13',
+        language: (all.language as Language) || 'zh',
         retentionDays: (all.retentionDays as RetentionDays) || '3',
         maxRecords: parseInt(all.maxRecords || '1000', 10),
         autoLaunch: all.autoLaunch === 'true',

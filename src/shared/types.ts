@@ -1,10 +1,11 @@
 /**
  * History Clipboard — 共享类型定义
- * @version 1.0
- * @date 2026-06-10
+ * @version 1.1
+ * @date 2026-06-12
  * @description 主进程与渲染进程共用的 TypeScript 类型
  *
  * 修订记录：
+ *   v1.1  2026-06-12  WorkBuddy  新增 Language 类型
  *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
@@ -37,6 +38,7 @@ export interface HistoryQueryParams {
 // ==================== 设置 ====================
 
 export type Theme = 'light' | 'dark';
+export type Language = 'zh' | 'en';
 export type FontSize = '12' | '14' | '16';
 export type AccentColor = '#1677FF' | '#52C41A' | '#FA8C16' | '#722ED1' | '#EB2F96' | '#13C2C2' | '#595959';
 export type RetentionDays = '1' | '3' | '7' | '14' | '30';
@@ -45,6 +47,7 @@ export interface AppSettings {
   theme: Theme;
   accentColor: AccentColor;
   fontSize: FontSize;
+  language: Language;
   retentionDays: RetentionDays;
   maxRecords: number;
   autoLaunch: boolean;

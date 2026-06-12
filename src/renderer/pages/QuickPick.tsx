@@ -1,10 +1,11 @@
 /**
  * History Clipboard — QuickPick 浮窗
- * @version 2.3
+ * @version 2.4
  * @date 2026-06-12
- * @description 原生 div 列表渲染；handleFav/Pin 调用 loadItems() 全量刷新（对齐刷新按钮机制）
+ * @description 原生 div 列表渲染；handleFav/Pin 调用 loadItems() 全量刷新 + i18n 接入
  *
  * 修订记录：
+ *   v2.4  2026-06-12  WorkBuddy  i18n 接入：useTranslation + 所有硬编码中文替换为 t() 调用
  *   v2.3  2026-06-12  WorkBuddy  B9 最终修复：放弃所有局部状态更新，直接 loadItems() 全量 DB 刷新
  *   v2.2  2026-06-11  WorkBuddy  尝试 await IPC 返回值 + setRenderItems（失败：不触发重渲染）
  *   v2.1  2026-06-11  WorkBuddy  尝试 useState 渲染源 + 乐观更新（失败：广播竞态）
@@ -15,22 +16,24 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input, Tag } from 'antd';
 import { SearchOutlined, StarOutlined, StarFilled, PushpinOutlined, PushpinFilled, ReloadOutlined } from '@ant-design/icons';
+import i18n from '../i18n';
 import type { ClipboardItem } from '../../shared/types';
 
 function fmtTime(dateStr: string): string {
   const now = Date.now();
   const then = +new Date(dateStr.replace(' ', 'T') + (dateStr.includes('+') ? '' : '+08:00'));
   const diff = now - then;
-  if (diff < 60000) return '刚刚';
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分前';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '时前';
+  if (diff < 60000) return i18n.t('quickpick.justNow');
+  if (diff < 3600000) return Math.floor(diff / 60000) + i18n.t('quickpick.minAgo', { n: Math.floor(diff / 60000) });
+  if (diff < 86400000) return Math.floor(diff / 3600000) + i18n.t('quickpick.hourAgo', { n: Math.floor(diff / 3600000) });
   return dateStr.substring(0, 10);
 }
 
 function gist(item: ClipboardItem, max = 55): string {
-  if (item.content_type === 'image') return '[图片]';
+  if (item.content_type === 'image') return i18n.t('quickpick.image');
   return item.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, max);
 }
 
@@ -41,6 +44,7 @@ function itemBg(item: ClipboardItem): string {
 }
 
 const QuickPick: React.FC = () => {
+  const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<any>(null);
@@ -170,7 +174,7 @@ const QuickPick: React.FC = () => {
         <Input
           ref={inputRef}
           prefix={<SearchOutlined style={{ color: '#999', fontSize: 12 }} />}
-          placeholder="搜索..."
+          placeholder={t('quickpick.search')}
           value={searchText}
           onChange={(e) => {
             setSearchText(e.target.value);
@@ -188,7 +192,7 @@ const QuickPick: React.FC = () => {
             padding: '2px 10px 4px',
           }}
         >
-          <span style={{ fontSize: 10, color: '#999' }}>{filtered.length} 条 · ↑↓ Enter Esc</span>
+          <span style={{ fontSize: 10, color: '#999' }}>{t('quickpick.stats', { count: filtered.length })}</span>
           <ReloadOutlined
             style={{ fontSize: 11, color: '#999', cursor: 'pointer' }}
             onClick={() => loadItems()}
@@ -199,11 +203,11 @@ const QuickPick: React.FC = () => {
       <div className="quickpick-list">
         {loading ? (
           <div style={{ textAlign: 'center', padding: 20, color: '#999', fontSize: 12 }}>
-            加载中...
+            {t('quickpick.loading')}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 20, color: '#999', fontSize: 12 }}>
-            无记录
+            {t('quickpick.noRecords')}
           </div>
         ) : (
           filtered.map((item, idx) => {
@@ -217,7 +221,7 @@ const QuickPick: React.FC = () => {
               >
                 {/* 点击内容区 → 复制；点击图标区 → 收藏/置顶；互不干扰 */}
                 <div className="item-content" onClick={() => handleCopy(item)}>
-                  <div className="item-text">{gist(item) || '(空)'}</div>
+                  <div className="item-text">{gist(item) || i18n.t('quickpick.empty')}</div>
                   <div className="item-meta">
                     <span className="item-time">{fmtTime(item.created_at)}</span>
                     {item.source_app && item.source_app !== 'Unknown' && (
@@ -238,7 +242,7 @@ const QuickPick: React.FC = () => {
                 <div className="item-actions">
                   <span
                     onClick={() => handleFav(item)}
-                    title={item.is_favorite ? '取消收藏' : '收藏'}
+                    title={item.is_favorite ? t('quickpick.unfavorite') : t('quickpick.favorite')}
                     style={{ cursor: 'pointer' }}
                   >
                     {item.is_favorite ? (
@@ -249,7 +253,7 @@ const QuickPick: React.FC = () => {
                   </span>
                   <span
                     onClick={() => handlePin(item)}
-                    title={item.is_pinned ? '取消置顶' : '置顶'}
+                    title={item.is_pinned ? t('quickpick.unpin') : t('quickpick.pin')}
                     style={{ cursor: 'pointer' }}
                   >
                     {item.is_pinned ? (

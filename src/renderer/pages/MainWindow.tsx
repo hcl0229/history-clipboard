@@ -1,9 +1,10 @@
 /**
  * History Clipboard — 主窗口
- * @version 1.4
- * @date 2026-06-11
+ * @version 1.5
+ * @date 2026-06-12
  *
  * 修订记录：
+ *   v1.5  2026-06-12  WorkBuddy  i18n 接入：useTranslation + 所有硬编码中文替换为 t() 调用
  *   v1.4  2026-06-11  WorkBuddy  列表始终显示置顶/收藏图标、selected 同步更新
  *   v1.3  2026-06-11  WorkBuddy  2Tab 剪切板/收藏、置顶始终最上、背景色区分
  *   v1.2  2026-06-11  WorkBuddy  统计从 items 派生、修复滚动条
@@ -12,12 +13,14 @@
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input, Typography, Button, Popconfirm, App as AntApp, Tooltip } from 'antd';
 import {
   SearchOutlined, StarOutlined, StarFilled, PushpinOutlined, PushpinFilled,
   DeleteOutlined, CopyOutlined, ClearOutlined, ReloadOutlined,
 } from '@ant-design/icons';
 import { useClipboardStore } from '../stores/clipboardStore';
+import i18n from '../i18n';
 import type { ClipboardItem } from '../../shared/types';
 
 const { Text, Paragraph } = Typography;
@@ -28,14 +31,14 @@ function fmtTime(dateStr: string): string {
   const then = +new Date(dateStr.replace(' ', 'T') + (dateStr.includes('+') ? '' : '+08:00'));
   if (isNaN(then)) return dateStr.substring(0, 10);
   const diff = now - then;
-  if (diff < 60000) return '刚刚';
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分前';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '时前';
+  if (diff < 60000) return i18n.t('quickpick.justNow');
+  if (diff < 3600000) return Math.floor(diff / 60000) + i18n.t('quickpick.minAgo', { n: Math.floor(diff / 60000) });
+  if (diff < 86400000) return Math.floor(diff / 3600000) + i18n.t('quickpick.hourAgo', { n: Math.floor(diff / 3600000) });
   return dateStr.substring(0, 10);
 }
 
 function gist(item: ClipboardItem, len = 40): string {
-  if (item.content_type === 'image') return '[图片]';
+  if (item.content_type === 'image') return i18n.t('quickpick.image');
   return item.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, len);
 }
 
@@ -49,6 +52,7 @@ const TAB_CLIPBOARD = 'clipboard';
 const TAB_FAVORITES = 'favorites';
 
 const MainWindow: React.FC = () => {
+  const { t } = useTranslation();
   const { items, setItems, addItem, loading, setLoading } = useClipboardStore();
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState(TAB_CLIPBOARD);
@@ -149,8 +153,8 @@ const MainWindow: React.FC = () => {
   };
 
   const tabs = [
-    { key: TAB_CLIPBOARD, label: '剪切板', count: stats.total },
-    { key: TAB_FAVORITES, label: '收藏', count: stats.favorites },
+    { key: TAB_CLIPBOARD, label: t('main.tabClipboard'), count: stats.total },
+    { key: TAB_FAVORITES, label: t('main.tabFavorites'), count: stats.favorites },
   ];
 
   return (
@@ -162,7 +166,7 @@ const MainWindow: React.FC = () => {
           <div style={{ padding: 8, flexShrink: 0 }}>
             <Input
               prefix={<SearchOutlined style={{ color: '#999' }} />}
-              placeholder="搜索..."
+              placeholder={t('main.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               size="small" allowClear
@@ -190,7 +194,7 @@ const MainWindow: React.FC = () => {
           <div style={{ flex: 1, overflow: 'auto', padding: '2px 0', minHeight: 0 }}>
             {listData.length === 0 ? (
               <div style={{ padding: 24, textAlign: 'center', color: '#bbb', fontSize: 12 }}>
-                {tab === TAB_FAVORITES ? '暂无收藏' : '暂无数据，复制内容即可记录'}
+                {tab === TAB_FAVORITES ? t('main.noFavorites') : t('main.noData')}
               </div>
             ) : (
               listData.map((item) => (
@@ -205,7 +209,7 @@ const MainWindow: React.FC = () => {
                   }}
                 >
                   <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {gist(item, 35) || '(空)'}
+                    {gist(item, 35) || i18n.t('quickpick.empty')}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
                     <span style={{ fontSize: 10, color: '#999' }}>{fmtTime(item.created_at)}</span>
@@ -229,8 +233,8 @@ const MainWindow: React.FC = () => {
 
           {/* 底部按钮 */}
           <div style={{ padding: 6, display: 'flex', gap: 6, borderTop: '1px solid #f0f0f0', flexShrink: 0 }}>
-            <Popconfirm title="确认清空？" onConfirm={handleClear}>
-              <Button size="small" icon={<ClearOutlined />} danger block>清空</Button>
+            <Popconfirm title={t('main.clearConfirm')} onConfirm={handleClear}>
+              <Button size="small" icon={<ClearOutlined />} danger block>{t('main.clearAll')}</Button>
             </Popconfirm>
             <Button size="small" icon={<ReloadOutlined />} loading={refreshing} onClick={() => { setRefreshing(true); load(); }} />
           </div>
@@ -245,23 +249,23 @@ const MainWindow: React.FC = () => {
                   {selected.created_at} | {selected.source_app || 'Unknown'}
                 </Text>
                 <div style={{ display: 'flex', gap: 2 }}>
-                  <Tooltip title={selected.is_favorite ? '取消收藏' : '收藏'}>
+                  <Tooltip title={selected.is_favorite ? t('main.unfavorite') : t('main.favorite')}>
                     <Button size="small" type="text" icon={selected.is_favorite ? <StarFilled style={{ color: '#faad14', fontSize: 14 }} /> : <StarOutlined style={{ fontSize: 14 }} />} onClick={() => handleFav(selected)} />
                   </Tooltip>
-                  <Tooltip title={selected.is_pinned ? '取消置顶' : '置顶'}>
+                  <Tooltip title={selected.is_pinned ? t('main.unpin') : t('main.pin')}>
                     <Button size="small" type="text" icon={selected.is_pinned ? <PushpinFilled style={{ color: '#ff4d4f', fontSize: 14 }} /> : <PushpinOutlined style={{ fontSize: 14 }} />} onClick={() => handlePin(selected)} />
                   </Tooltip>
-                  <Tooltip title="复制">
+                  <Tooltip title={t('main.copy')}>
                     <Button size="small" type="text" icon={<CopyOutlined />} onClick={() => handleCopy(selected)} />
                   </Tooltip>
-                  <Popconfirm title="确认删除？" onConfirm={() => handleDelete(selected.id)}>
+                  <Popconfirm title={t('main.deleteConfirm')} onConfirm={() => handleDelete(selected.id)}>
                     <Button size="small" type="text" danger icon={<DeleteOutlined />} />
                   </Popconfirm>
                 </div>
               </div>
               <div style={{ flex: 1, padding: 10, overflow: 'auto' }}>
                 <Paragraph copyable ellipsis={{ rows: 20, expandable: true }} style={{ fontSize: 13 }}>
-                  {selected.content_type === 'image' ? '[图片]' : selected.content.replace(/<[^>]+>/g, '\n').replace(/&nbsp;/g, ' ')}
+                  {selected.content_type === 'image' ? i18n.t('quickpick.image') : selected.content.replace(/<[^>]+>/g, '\n').replace(/&nbsp;/g, ' ')}
                 </Paragraph>
               </div>
             </div>
@@ -269,9 +273,9 @@ const MainWindow: React.FC = () => {
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', color: '#bbb' }}>
                 <div style={{ fontSize: 28, marginBottom: 6 }}>📋</div>
-                <div style={{ fontSize: 12 }}>选择记录查看详情</div>
+                <div style={{ fontSize: 12 }}>{t('main.selectHint')}</div>
                 <div style={{ fontSize: 10, marginTop: 6, lineHeight: 1.6 }}>
-                  总计 {stats.total} · 置顶 {stats.pinned} · 收藏 {stats.favorites}
+                  {t('main.stats.total')} {stats.total} · {t('main.stats.pin')} {stats.pinned} · {t('main.stats.fav')} {stats.favorites}
                 </div>
               </div>
             </div>

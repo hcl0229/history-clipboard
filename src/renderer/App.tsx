@@ -1,31 +1,48 @@
 /**
  * History Clipboard — 根组件
- * @version 1.0
- * @date 2026-06-10
- * @description 基于 URL hash 的简单路由 + Ant Design 主题注入
+ * @version 1.1
+ * @date 2026-06-12
+ * @description 基于 URL hash 的路由 + Ant Design 主题注入 + i18n 语言切换
+ *
+ * 修订记录：
+ *   v1.1  2026-06-12  WorkBuddy  接入 i18n：语言同步、antd locale 切换、hash 路由动态监听
+ *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ConfigProvider, theme as antTheme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import enUS from 'antd/locale/en_US';
 import { useSettingsStore } from './stores/settingsStore';
+import i18n from './i18n';
 import QuickPick from './pages/QuickPick';
 import MainWindow from './pages/MainWindow';
 import Settings from './pages/Settings';
 
 const App: React.FC = () => {
-  const { theme: appTheme, accentColor, fontSize, loadFromElectron } = useSettingsStore();
+  const { theme: appTheme, accentColor, fontSize, language, loadFromElectron } = useSettingsStore();
+  const [route, setRoute] = useState(() => getRoute());
 
-  useEffect(() => {
-    loadFromElectron();
-  }, []);
-
-  // 简单 hash 路由
-  const route = useMemo(() => {
+  function getRoute() {
     const hash = window.location.hash || '#/';
     if (hash.startsWith('#/quickpick')) return 'quickpick';
     if (hash.startsWith('#/settings')) return 'settings';
     return 'main';
+  }
+
+  // 加载设置（含语言偏好）
+  useEffect(() => { loadFromElectron(); }, []);
+
+  // i18n 语言同步：settingsStore.language 变化时切换 i18next 语言
+  useEffect(() => {
+    i18n.changeLanguage(language);
+  }, [language]);
+
+  // hash 路由动态监听（支持托盘菜单 navigate 推送）
+  useEffect(() => {
+    const onHash = () => setRoute(getRoute());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
   const themeConfig = useMemo(
@@ -41,7 +58,7 @@ const App: React.FC = () => {
   );
 
   return (
-    <ConfigProvider locale={zhCN} theme={themeConfig}>
+    <ConfigProvider locale={language === 'en' ? enUS : zhCN} theme={themeConfig}>
       {route === 'quickpick' ? (
         <QuickPick />
       ) : route === 'settings' ? (
