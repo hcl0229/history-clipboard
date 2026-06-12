@@ -1,9 +1,10 @@
 /**
  * History Clipboard — 主窗口
- * @version 1.6
- * @date 2026-06-12
+ * @version 1.7
+ * @date 2026-06-13
  *
  * 修订记录：
+ *   v1.7  2026-06-13  WorkBuddy  新增删除按钮 + 右键上下文菜单（收藏/置顶/删除）
  *   v1.6  2026-06-12  WorkBuddy  CSS 类化重构：inline styles → 语义化 CSS 类 + 暗色主题适配
  *   v1.5  2026-06-12  WorkBuddy  i18n 接入：useTranslation + 所有硬编码中文替换为 t() 调用
  *   v1.4  2026-06-11  WorkBuddy  列表始终显示置顶/收藏图标、selected 同步更新
@@ -60,6 +61,9 @@ const MainWindow: React.FC = () => {
   const [tab, setTab] = useState(TAB_CLIPBOARD);
   const [selected, setSelected] = useState<ClipboardItem | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean; x: number; y: number; item: ClipboardItem | null;
+  }>({ visible: false, x: 0, y: 0, item: null });
 
   const load = useCallback(async (silent = false) => {
     if (!window.electronAPI) {
@@ -148,6 +152,13 @@ const MainWindow: React.FC = () => {
     if (selected?.id === id) setSelected(null);
   };
 
+  // 右键菜单
+  const handleContextMenu = (e: React.MouseEvent, item: ClipboardItem) => {
+    e.preventDefault();
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, item });
+  };
+  const closeContextMenu = () => setContextMenu({ visible: false, x: 0, y: 0, item: null });
+
   const handleClear = async () => {
     await window.electronAPI?.clearAll();
     load();
@@ -198,7 +209,7 @@ const MainWindow: React.FC = () => {
                 const cls = ['mw-list-item', sel ? 'active' : '', itemClass(item)]
                   .filter(Boolean).join(' ');
                 return (
-                  <div key={item.id} className={cls} onClick={() => setSelected(item)}>
+                  <div key={item.id} className={cls} onClick={() => setSelected(item)} onContextMenu={(e) => handleContextMenu(e, item)}>
                     <div className="mw-item-text">
                       {gist(item, 35) || i18n.t('quickpick.empty')}
                     </div>
@@ -214,6 +225,9 @@ const MainWindow: React.FC = () => {
                           {item.is_favorite
                             ? <StarFilled style={{ color: '#faad14', fontSize: 12 }} />
                             : <StarOutlined style={{ color: '#bbb', fontSize: 12 }} />}
+                        </span>
+                        <span onClick={() => handleDelete(item.id)}>
+                          <DeleteOutlined style={{ color: '#bbb', fontSize: 12, cursor: 'pointer' }} />
                         </span>
                       </span>
                     </div>
@@ -274,6 +288,27 @@ const MainWindow: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* 右键菜单 */}
+      {contextMenu.visible && contextMenu.item && (
+        <div className="context-menu-overlay" onClick={closeContextMenu}>
+          <div className="context-menu" style={{ left: contextMenu.x, top: contextMenu.y }}>
+            <div className="context-menu-item" onClick={() => { handleFav(contextMenu.item!); closeContextMenu(); }}>
+              {contextMenu.item.is_favorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+              <span>{contextMenu.item.is_favorite ? t('main.unfavorite') : t('main.favorite')}</span>
+            </div>
+            <div className="context-menu-item" onClick={() => { handlePin(contextMenu.item!); closeContextMenu(); }}>
+              {contextMenu.item.is_pinned ? <PushpinFilled style={{ color: '#ff4d4f' }} /> : <PushpinOutlined />}
+              <span>{contextMenu.item.is_pinned ? t('main.unpin') : t('main.pin')}</span>
+            </div>
+            <div className="context-menu-divider" />
+            <div className="context-menu-item danger" onClick={() => { handleDelete(contextMenu.item!.id); closeContextMenu(); }}>
+              <DeleteOutlined />
+              <span>{t('main.delete')}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </AntApp>
   );
 };

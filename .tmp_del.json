@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "identity": "user",
+  "error": {
+    "type": "api",
+    "subtype": "unknown",
+    "code": 800080207,
+    "message": "unsafe_operation_blocked",
+    "hint": "The primary field cannot be deleted. Current primary field: fldRf4eICA(\"文本\"). Change another field to be the primary field first, then retry deleting this one.",
+    "log_id": "20260613000323D32955CE4AB355D2C099"
+  },
+  "_notice": {
+    "update": {
+      "command": "lark-cli update",
+      "current": "1.0.52",
+      "latest": "1.0.53",
+      "message": "lark-cli 1.0.53 available, current 1.0.52, run: lark-cli update"
+    }
+  }
+}

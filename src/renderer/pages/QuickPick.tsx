@@ -1,10 +1,11 @@
 /**
  * History Clipboard — QuickPick 浮窗
- * @version 2.4
- * @date 2026-06-12
- * @description 原生 div 列表渲染；handleFav/Pin 调用 loadItems() 全量刷新 + i18n 接入
+ * @version 2.5
+ * @date 2026-06-13
+ * @description 原生 div 列表渲染；新增删除按钮 + 右键菜单（收藏/置顶/删除）
  *
  * 修订记录：
+ *   v2.5  2026-06-13  WorkBuddy  新增删除按钮 + 右键上下文菜单
  *   v2.4  2026-06-12  WorkBuddy  i18n 接入：useTranslation + 所有硬编码中文替换为 t() 调用
  *   v2.3  2026-06-12  WorkBuddy  B9 最终修复：放弃所有局部状态更新，直接 loadItems() 全量 DB 刷新
  *   v2.2  2026-06-11  WorkBuddy  尝试 await IPC 返回值 + setRenderItems（失败：不触发重渲染）
@@ -19,7 +20,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input, Tag } from 'antd';
 import type { InputRef } from 'antd';
-import { SearchOutlined, StarOutlined, StarFilled, PushpinOutlined, PushpinFilled, ReloadOutlined } from '@ant-design/icons';
+import { SearchOutlined, StarOutlined, StarFilled, PushpinOutlined, PushpinFilled, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import i18n from '../i18n';
 import type { ClipboardItem } from '../../shared/types';
 
@@ -50,9 +51,14 @@ const QuickPick: React.FC = () => {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<InputRef>(null);
 
-  // 渲染状态：本地 useState 管理，React 原生 setState 保证重渲染
+  // 渲染状态
   const [renderItems, setRenderItems] = useState<ClipboardItem[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // 右键菜单状态
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean; x: number; y: number; item: ClipboardItem | null;
+  }>({ visible: false, x: 0, y: 0, item: null });
 
   const loadItems = useCallback(async () => {
     if (!window.electronAPI) return;
@@ -140,6 +146,27 @@ const QuickPick: React.FC = () => {
     window.electronAPI?.hideWindow();
   };
 
+  const handleDelete = async (item: ClipboardItem) => {
+    await window.electronAPI?.deleteItem(item.id);
+    setRenderItems((prev) => prev.filter((it) => it.id !== item.id));
+  };
+
+  // 右键菜单
+  const handleContextMenu = (e: React.MouseEvent, item: ClipboardItem) => {
+    e.preventDefault();
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, item });
+  };
+
+  const closeContextMenu = () => setContextMenu({ visible: false, x: 0, y: 0, item: null });
+
+  // 全局点击关闭右键菜单
+  useEffect(() => {
+    if (!contextMenu.visible) return;
+    const close = () => setContextMenu({ visible: false, x: 0, y: 0, item: null });
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [contextMenu.visible]);
+
   /**
    * 收藏切换
    *
@@ -219,6 +246,7 @@ const QuickPick: React.FC = () => {
                 className={`quickpick-item ${sel ? 'selected' : ''}`}
                 style={{ background: sel ? undefined : itemBg(item) }}
                 onMouseEnter={() => setSelectedIdx(idx)}
+                onContextMenu={(e) => handleContextMenu(e, item)}
               >
                 {/* 点击内容区 → 复制；点击图标区 → 收藏/置顶；互不干扰 */}
                 <div className="item-content" onClick={() => handleCopy(item)}>
@@ -241,27 +269,18 @@ const QuickPick: React.FC = () => {
                 </div>
 
                 <div className="item-actions">
-                  <span
-                    onClick={() => handleFav(item)}
-                    title={item.is_favorite ? t('quickpick.unfavorite') : t('quickpick.favorite')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {item.is_favorite ? (
-                      <StarFilled style={{ fontSize: 14, color: '#faad14' }} />
-                    ) : (
-                      <StarOutlined style={{ fontSize: 14, color: '#999' }} />
-                    )}
+                  <span onClick={() => handleFav(item)} title={item.is_favorite ? t('quickpick.unfavorite') : t('quickpick.favorite')} style={{ cursor: 'pointer' }}>
+                    {item.is_favorite
+                      ? <StarFilled style={{ fontSize: 14, color: '#faad14' }} />
+                      : <StarOutlined style={{ fontSize: 14, color: '#999' }} />}
                   </span>
-                  <span
-                    onClick={() => handlePin(item)}
-                    title={item.is_pinned ? t('quickpick.unpin') : t('quickpick.pin')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {item.is_pinned ? (
-                      <PushpinFilled style={{ fontSize: 14, color: '#ff4d4f' }} />
-                    ) : (
-                      <PushpinOutlined style={{ fontSize: 14, color: '#999' }} />
-                    )}
+                  <span onClick={() => handlePin(item)} title={item.is_pinned ? t('quickpick.unpin') : t('quickpick.pin')} style={{ cursor: 'pointer' }}>
+                    {item.is_pinned
+                      ? <PushpinFilled style={{ fontSize: 14, color: '#ff4d4f' }} />
+                      : <PushpinOutlined style={{ fontSize: 14, color: '#999' }} />}
+                  </span>
+                  <span onClick={() => handleDelete(item)} title={t('main.delete')} style={{ cursor: 'pointer' }}>
+                    <DeleteOutlined style={{ fontSize: 14, color: '#999' }} />
                   </span>
                 </div>
               </div>
@@ -269,6 +288,33 @@ const QuickPick: React.FC = () => {
           })
         )}
       </div>
+
+      {/* 右键菜单 */}
+      {contextMenu.visible && contextMenu.item && (
+        <div
+          className="context-menu-overlay"
+          onClick={closeContextMenu}
+        >
+          <div
+            className="context-menu"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+          >
+            <div className="context-menu-item" onClick={() => { handleFav(contextMenu.item!); closeContextMenu(); }}>
+              {contextMenu.item.is_favorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+              <span>{contextMenu.item.is_favorite ? t('quickpick.unfavorite') : t('quickpick.favorite')}</span>
+            </div>
+            <div className="context-menu-item" onClick={() => { handlePin(contextMenu.item!); closeContextMenu(); }}>
+              {contextMenu.item.is_pinned ? <PushpinFilled style={{ color: '#ff4d4f' }} /> : <PushpinOutlined />}
+              <span>{contextMenu.item.is_pinned ? t('quickpick.unpin') : t('quickpick.pin')}</span>
+            </div>
+            <div className="context-menu-divider" />
+            <div className="context-menu-item danger" onClick={() => { handleDelete(contextMenu.item!); closeContextMenu(); }}>
+              <DeleteOutlined />
+              <span>{t('main.delete')}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

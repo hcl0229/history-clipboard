@@ -171,5 +171,30 @@ html, body, #root {
 [data-theme='dark'] .mw-empty-stats { color: #666; }
 [data-theme='dark'] .mw-list-item.active { background: rgba(22,119,255,0.15); }
 
+/* ================================================================
+ * 右键菜单
+ * ================================================================ */
+.context-menu-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;
+}
+.context-menu {
+  position: fixed; z-index: 10000;
+  background: #fff; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 4px 0; min-width: 140px; font-size: 12px;
+}
+.context-menu-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  cursor: pointer; transition: background 0.1s;
+}
+.context-menu-item:hover { background: rgba(0,0,0,0.04); }
+.context-menu-item.danger { color: #ff4d4f; }
+.context-menu-item.danger:hover { background: rgba(255,77,79,0.06); }
+.context-menu-divider {
+  height: 1px; background: #f0f0f0; margin: 4px 0;
+}
+[data-theme='dark'] .context-menu { background: #2a2a2a; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+[data-theme='dark'] .context-menu-item:hover { background: rgba(255,255,255,0.06); }
+[data-theme='dark'] .context-menu-divider { background: #444; }
+
 /* --- 设置面板暗色 --- */
 [data-theme='dark'] .ant-form-item-label > label { color: #ccc !important; }

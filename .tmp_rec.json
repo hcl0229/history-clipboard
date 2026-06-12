@@ -1,0 +1,9 @@
+`_record_id` is metadata for record operations, not a table field.
+
+| _record_id | ID | 实现文件 | 状态 | 功能 | 优先级 | 备注 | 模块 | 描述 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| recvmluCN0daOC |  | clipboard-monitor.ts | ["✅ 已完成"] | 剪贴板轮询 | ["P0"] | SHA256哈希去重 | 剪贴板监控 | 300ms定时轮询系统剪贴板 |
+| recvmluCN0iiwN |  | clipboard-monitor.ts | ["✅ 已完成"] | 前景应用检测 | ["P0"] | 2s缓存 | 剪贴板监控 | 异步PowerShell获取前台窗口标题 |
+| recvmluCN00ZZ2 |  | database.ts | ["✅ 已完成"] | SQLite存储 | ["P0"] | 3表 | 数据库 | WAL模式自动建表迁移 |
+
+Meta: count=3; has_more=true; record_scope=all_records; field_scope=all_fields
