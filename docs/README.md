@@ -160,7 +160,8 @@ history-clipboard/
 │   ├── feature-spec.md            # 功能规格（实现状态标记）
 │   ├── ui-design.md               # 界面设计 + 色彩系统 + 重构方案
 │   ├── implementation-plan.md     # 执行计划 + B1-B11 Bug 追踪表
-│   └── problem-summary.md         # 问题全面总结 + 架构分析
+│   ├── problem-summary.md         # 问题全面总结 + 架构分析
+│   └── History-Clipboard-PM.xlsx  # 📊 项目管理 Excel（需求/问题/风险/版本）
 ├── src/
 │   ├── main/                      # Electron 主进程（7 模块）
 │   │   ├── index.ts               #   应用入口 + 生命周期
