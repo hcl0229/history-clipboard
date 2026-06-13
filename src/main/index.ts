@@ -1,15 +1,17 @@
 /**
  * History Clipboard — Electron 主进程入口
- * @version 1.0
- * @date 2026-06-10
+ * @version 1.1
+ * @date 2026-06-13
  * @description 应用生命周期管理，创建窗口、注册模块
  *
  * 修订记录：
+ *   v1.1  2026-06-13  WorkBuddy  修复托盘图标加载 icon.ico + 托盘菜单/窗口标题 i18n
  *   v1.0  2026-06-10  WorkBuddy  初始版本
  */
 
 import { app, BrowserWindow, Tray, Menu, nativeImage, globalShortcut, screen } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import { initDatabase, closeDatabase, getSetting } from './database';
 import { startClipboardMonitor, stopClipboardMonitor } from './clipboard-monitor';
 import { registerIpcHandlers } from './ipc-handlers';
@@ -20,6 +22,44 @@ let mainWindow: BrowserWindow | null = null;
 let quickPickWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuitting = false;
+
+// ==================== i18n 主进程翻译 ====================
+// 主进程无法使用 react-i18next，直接从 JSON 文件加载翻译
+
+let localeData: Record<string, string> = {};
+
+function loadLocale(lang: string): void {
+  try {
+    const localePath = path.join(__dirname, '../renderer/locales', `${lang}.json`);
+    if (fs.existsSync(localePath)) {
+      const raw = JSON.parse(fs.readFileSync(localePath, 'utf-8'));
+      // 扁平化嵌套 key：{ tray: { show: 'X' } } → { 'tray.show': 'X' }
+      localeData = flattenKeys(raw);
+      return;
+    }
+  } catch (e) {
+    console.warn('[i18n] Failed to load locale:', lang, e);
+  }
+  // 回退到硬编码中文
+  localeData = {};
+}
+
+function t(key: string): string {
+  return localeData[key] || key;
+}
+
+function flattenKeys(obj: Record<string, unknown>, prefix = ''): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const fullKey = prefix ? `${prefix}.${k}` : k;
+    if (typeof v === 'string') {
+      result[fullKey] = v;
+    } else if (typeof v === 'object' && v !== null) {
+      Object.assign(result, flattenKeys(v as Record<string, unknown>, fullKey));
+    }
+  }
+  return result;
+}
 
 // 确保单实例
 const gotLock = app.requestSingleInstanceLock();
@@ -36,7 +76,7 @@ function createMainWindow(): BrowserWindow {
     height: Math.min(500, Math.round(sh * 0.72)),
     minWidth: 500,
     minHeight: 380,
-    title: 'History Clipboard',
+    title: t('app.title') || 'History Clipboard',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
@@ -103,25 +143,39 @@ function createQuickPickWindow(): BrowserWindow {
 // ==================== 托盘 ====================
 
 function createTray(): void {
-  const icon = nativeImage.createEmpty();
+  // 加载真实图标，失败则回退空图标
+  const iconPath = path.join(__dirname, '../../resources/icon.ico');
+  let icon: Electron.NativeImage;
+  try {
+    icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+    if (icon.isEmpty()) throw new Error('Icon loaded but empty');
+  } catch {
+    console.warn('[Tray] Failed to load icon.ico, using empty icon');
+    icon = nativeImage.createEmpty();
+  }
   tray = new Tray(icon);
-  tray.setToolTip('History Clipboard — Ctrl+Shift+V');
+
+  // 加载 i18n 翻译
+  const lang = getSetting('language') || 'zh';
+  loadLocale(lang);
+
+  tray.setToolTip(t('app.title'));
 
   const menu = Menu.buildFromTemplate([
     {
-      label: '打开主窗口',
+      label: t('tray.show'),
       click: () => {
         mainWindow?.show();
         mainWindow?.focus();
       },
     },
     {
-      label: '快速粘贴 (Ctrl+Shift+V)',
+      label: t('tray.quick'),
       click: () => toggleQuickPick(),
     },
     { type: 'separator' },
     {
-      label: '退出',
+      label: t('tray.quit'),
       click: () => {
         isQuitting = true;
         app.quit();
@@ -179,6 +233,9 @@ app.on('second-instance', () => {
 
 app.whenReady().then(() => {
   initDatabase();
+  // 加载 i18n 翻译（必须在创建窗口/托盘前）
+  const lang = getSetting('language') || 'zh';
+  loadLocale(lang);
   registerIpcHandlers();
   mainWindow = createMainWindow();
   quickPickWindow = createQuickPickWindow();

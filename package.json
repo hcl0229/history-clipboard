@@ -11,7 +11,7 @@
     "dev:renderer": "vite",
     "dev:electron": "wait-on http://localhost:5173 && tsc -p tsconfig.node.json && node scripts/start-electron.cjs",
     "start": "npm run build && node scripts/start-electron.cjs",
-    "build": "tsc -p tsconfig.node.json && vite build",
+    "build": "tsc -p tsconfig.node.json && vite build && node -e \"const fs=require('fs');fs.cpSync('src/renderer/locales','dist/renderer/locales',{recursive:true})\"",
     "build:win": "npm run build && electron-builder --win",
     "lint": "eslint src/ --ext .ts,.tsx",
     "lint:fix": "eslint src/ --ext .ts,.tsx --fix",
