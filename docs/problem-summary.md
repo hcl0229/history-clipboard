@@ -1,6 +1,6 @@
 # History Clipboard — 问题全面总结
 
-> 版本：v1.1 | 日期：2026-06-12 | 状态：B9 已修复（v2.3: loadItems() 全量刷新），全部问题归档
+> 版本：v1.2 | 日期：2026-06-13 | 状态：全部问题已修复 ✅（含 C1-C4 审计项）
 
 ---
 
@@ -42,11 +42,11 @@ QuickPick 的 `stopPropagation` + `e.target.closest` 混合方案复杂且不可
 
 | 项 | 说明 |
 |------|------|
-| 国际化 | i18next 已安装、翻译文件已写，但 UI 暂未接入 |
-| 暗色主题 | CSS 变量仅部分定义，未全量适配 |
-| 窗口最小尺寸 | QuickPick 280×280 偏大 |
-| 打包 | 未执行过 `npm run build:win` |
-| 托盘图标 | `resources/icon.ico` 缺失，托盘空白 |
+| 国际化 | ✅ 已修复：全部组件 i18n + 托盘菜单/窗口标题 |
+| 暗色主题 | ✅ 已修复：data-theme CSS + Ant Design darkAlgorithm |
+| 窗口最小尺寸 | ✅ 已修复：QuickPick 340×420 |
+| 打包 | ✅ 已配置：electron-builder NSIS |
+| 托盘图标 | ✅ 已修复：加载 icon.ico 替代 createEmpty() |
 
 ## 五、B9 专项分析
 
@@ -65,5 +65,6 @@ QuickPick 的 `stopPropagation` + `e.target.closest` 混合方案复杂且不可
 
 | 版本 | 日期 | 修改内容 | 作者 |
 |------|------|---------|------|
+| v1.2 | 2026-06-13 | C1-C4 审计项修复：托盘图标/菜单/标题 i18n | WorkBuddy |
 | v1.1 | 2026-06-12 | 状态更新：B9 已修复（v2.3: loadItems() 全量刷新），全部问题已解决 | WorkBuddy |
 | v1.0 | 2026-06-11 | 12 问题系统性总结 + B9 5 轮尝试分析 + 重构方案建议 | WorkBuddy |
